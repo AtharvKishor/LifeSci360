@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="LifeSci360.Identity.API/LifeSci360.Identity.API.csproj" />
+  <Project Path="LifeSci360.Shared/LifeSci360.Shared.csproj" />
+</Solution>

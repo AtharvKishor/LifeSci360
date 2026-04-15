@@ -1,0 +1,260 @@
+﻿@page
+@model LifeSci360.Identity.API.Pages.Admin.ManageUsersModel
+@{
+    ViewData["Title"] = "Manage Users";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Users — LifeSci360</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+</head>
+<body style="background-color: #f0f2f5; min-height: 100vh;">
+
+    <!-- Navbar -->
+    <nav class="navbar bg-white border-bottom shadow-sm px-4">
+        <span class="navbar-brand fw-semibold text-primary">LifeSci360</span>
+        <span class="text-muted small ms-2">/ Admin / Manage Users</span>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <a asp-page="/Admin/Index"
+                   class="btn btn-outline-secondary btn-sm">
+                ← Back to Dashboard
+            </a>
+            <a asp-page="/Admin/CreateUser"
+                   class="btn btn-primary btn-sm">
+                + Provision New User
+            </a>
+            <form method="post" asp-page="/Account/Logout">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    Logout
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h5 class="fw-semibold mb-1">Manage Users</h5>
+                <p class="text-muted small mb-0">
+                    View, change roles, activate, deactivate or remove staff accounts.
+                </p>
+            </div>
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                @Model.Users.Count Total Users
+            </span>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                         fill="currentColor" class="text-muted flex-shrink-0"
+                         viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" />
+                    </svg>
+                    <input type="text"
+                           id="searchInput"
+                           class="form-control form-control-sm border-0 shadow-none"
+                           placeholder="Search by name, email or role..." />
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0"
+                           id="usersTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4 small fw-semibold">User</th>
+                                <th class="small fw-semibold">Email</th>
+                                <th class="small fw-semibold">Phone</th>
+                                <th class="small fw-semibold">Status</th>
+                                <th class="small fw-semibold">Created</th>
+                                <th class="small fw-semibold text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model.Users)
+                            {
+                                <tr>
+                                    <!-- User -->
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle bg-primary
+                                                bg-opacity-10 d-flex
+                                                align-items-center
+                                                justify-content-center"
+                                                 style="width:36px; height:36px;
+                                                font-size:13px;
+                                                font-weight:500;
+                                                color:#0d6efd;
+                                                flex-shrink:0;">
+                                                @user.FullName.Substring(0, 1).ToUpper()
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 small fw-semibold">
+                                                    @user.FullName
+                                                </p>
+                                                @if (user.IsSystemAdmin)
+                                                {
+                                                    <span style="font-size:10px;"
+                                                          class="badge bg-warning
+                                                        bg-opacity-10
+                                                        text-warning">
+                                                        System Account
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Email -->
+                                    <td class="small text-muted">@user.Email</td>
+
+                                    <!-- Phone -->
+                                    <td class="small text-muted">
+                                        @(string.IsNullOrEmpty(user.PhoneNumber)
+                                            ? "—" : user.PhoneNumber)
+                                    </td>
+
+                                    <!-- Status -->
+                                    <td>
+                                        @if (user.IsActive)
+                                        {
+                                            <span class="badge bg-success bg-opacity-10
+                                                text-success px-2 py-1 small">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger bg-opacity-10
+                                                text-danger px-2 py-1 small">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Created -->
+                                    <td class="small text-muted">
+                                        @user.CreatedDate.ToString("dd MMM yyyy")
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td class="text-end pe-4">
+                                        @if (!user.IsSystemAdmin)
+                                        {
+                                            <div class="d-flex gap-2
+                                                justify-content-end
+                                                align-items-center flex-wrap">
+
+                                                <!-- Change Role -->
+                                                <form method="post"
+                                                      asp-page-handler="ChangeRole"
+                                                      class="d-flex gap-1 align-items-center">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden"
+                                                           name="userId"
+                                                           value="@user.Id" />
+                                                    <select name="newRole"
+                                                            class="form-select form-select-sm"
+                                                            style="width:auto; font-size:12px;">
+                                                        @foreach (var role in Model.RoleList)
+                                                        {
+                                                            if (role == user.Role)
+                                                            {
+                                                                <option value="@role"
+                                                                        selected>
+                                                                    @role
+                                                                </option>
+                                                            }
+                                                            else
+                                                            {
+                                                                <option value="@role">
+                                                                    @role
+                                                                </option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-outline-primary">
+                                                        Save
+                                                    </button>
+                                                </form>
+
+                                                <!-- Toggle Status -->
+                                                <form method="post"
+                                                      asp-page-handler="ToggleStatus">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden"
+                                                           name="userId"
+                                                           value="@user.Id" />
+                                                    <button type="submit"
+                                                            class="btn btn-sm
+                                                        @(user.IsActive
+                                                                                                                    ? "btn-outline-warning"
+                                                                                                                    : "btn-outline-success")">
+                                                        @(user.IsActive
+                                                            ? "Deactivate" : "Activate")
+                                                    </button>
+                                                </form>
+
+                                                <!-- Delete -->
+                                                <form method="post"
+                                                      asp-page-handler="Delete"
+                                                      onsubmit="return confirm(
+                                                    'Delete @user.FullName? This cannot be undone.')">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden"
+                                                           name="userId"
+                                                           value="@user.Id" />
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-outline-danger">
+                                                        Delete
+                                                    </button>
+                                                </form>
+
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">
+                                                Protected
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function () {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#usersTable tbody tr');
+        rows.forEach(row => {
+        row.style.display =
+        row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+        });
+        });
+    </script>
+</body>
+</html>
