@@ -1,60 +1,9 @@
-# Build outputs
 bin/
 obj/
-
-# Visual Studio files
 .vs/
 *.user
-*.suo
-*.userosscache
-*.sln.docstates
-
-# NuGet
-*.nupkg
-packages/
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# ASP.NET
-wwwroot/lib/
-
-# Sensitive config files - NEVER commit these
+Migrations/*.Designer.cs
 appsettings.json
 appsettings.Development.json
 appsettings.Production.json
-
-# But keep the example file
 !appsettings.example.json
-
-# Entity Framework migrations (keep migrations, ignore snapshots if needed)
-# *.Designer.cs  ← dont add this, keep migrations
-
-# Logs
-*.log
-logs/
-
-# OS files
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Rider IDE
-.idea/
-
-# VSCode
-.vscode/
-
-# Test results
-TestResults/
-coverage/
-
-# Publish output
-publish/
-# These three are critical
-Migrations/*.Designer.cs
-appsettings.json              
-appsettings.Development.json  
-.vs/                          
-bin/                          
-obj/                          
