@@ -1,14 +1,16 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using LifeSci360.Identity.API.Data;
 using LifeSci360.Identity.API.Models;
+using LifeSci360.Identity.API.Services;
+using LifeSci360.Shared.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
+builder.Services.AddControllers(); 
+builder.Services.AddControllers();
+builder.Services.AddScoped<IProtocolService, ProtocolService>(); 
 
 // Database
 builder.Services.AddDbContext<AppIdentityDbContext>(options =>
@@ -17,13 +19,11 @@ builder.Services.AddDbContext<AppIdentityDbContext>(options =>
 // Identity with ApplicationRole
 builder.Services.AddIdentity<User, ApplicationRole>(options =>
 {
-    // Password policies
     options.Password.RequiredLength = 10;
     options.Password.RequireUppercase = true;
     options.Password.RequireDigit = true;
     options.Password.RequireNonAlphanumeric = true;
 
-    // Lockout policy
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 
@@ -51,7 +51,6 @@ using (var scope = app.Services.CreateScope())
     var userManager = scope.ServiceProvider
                           .GetRequiredService<UserManager<User>>();
 
-    // Seed all 6 roles into Roles table
     string[] roles = {
         "Admin",
         "ResearchScientist",
@@ -75,7 +74,6 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // Seed default Admin user
     var adminEmail = "admin@lifesci360.com";
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
@@ -91,7 +89,6 @@ using (var scope = app.Services.CreateScope())
             EmailConfirmed = true
         };
 
-        // Create admin with a strong default password
         var result = await userManager.CreateAsync(admin, "Admin@12345!");
 
         if (result.Succeeded)
@@ -108,14 +105,13 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-
-app.UseStaticFiles();
-app.UseRouting();
+app.UseStaticFiles();  
+app.UseRouting();      
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapControllers(); 
+
 app.Run();

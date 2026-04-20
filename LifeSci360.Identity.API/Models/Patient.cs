@@ -5,12 +5,17 @@ namespace LifeSci360.Identity.API.Models
     public class Patient
     {
         [Key]
+        public int PatientID { get; set; }
 
-        public Guid PatientID { get; set; }
-        public Guid ProtocolID { get; set; }
-        public string FullName { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public string Status { get; set; }
-        public DateTime EnrolledDate { get; set; }
+        [Required, MaxLength(200)]
+        public string Name { get; set; } = null!;
+
+        public DateTime DOB { get; set; }
+
+        [MaxLength(500)]
+        public string? ContactInfo { get; set; }
+
+        [Required, MaxLength(50)]
+        public string EnrollmentStatus { get; set; } = "Pending";
     }
 }

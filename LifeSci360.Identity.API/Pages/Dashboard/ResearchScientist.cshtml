@@ -1,4 +1,466 @@
 ﻿@page
 @model LifeSci360.Identity.API.Pages.Dashboard.ResearchScientistModel
 @{
+    ViewData["Title"] = "Research Scientist";
+    Layout = null;
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Research Scientist — LifeSci360</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <style>
+        body { background: #f4f6f9; min-height: 100vh; font-size: 14px; }
+        .topbar { background: #fff; border-bottom: 1px solid #e0e4ea;
+                  padding: 0.75rem 1.5rem; }
+        .brand { font-weight: 700; color: #0d6efd; font-size: 1rem; }
+        .stat-card { background: #fff; border: 1px solid #e2e5ea;
+                     border-radius: 8px; padding: 1rem 1.25rem; }
+        .stat-label { font-size: 11px; color: #999;
+                      text-transform: uppercase; letter-spacing: 0.5px;
+                      margin-bottom: 6px; }
+        .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+        .main-card { background: #fff; border: 1px solid #e2e5ea;
+                     border-radius: 8px; overflow: hidden; }
+        .toolbar { padding: 0.75rem 1rem; border-bottom: 1px solid #eee;
+                   display: flex; align-items: center;
+                   justify-content: space-between; background: #fafafa; }
+        .table th { font-size: 11px; color: #888; font-weight: 600;
+                    text-transform: uppercase; letter-spacing: 0.4px;
+                    padding: 0.6rem 1rem; border-bottom: 1px solid #eee;
+                    background: #fafafa; }
+        .table td { font-size: 13px; padding: 0.7rem 1rem;
+                    vertical-align: middle; border-color: #f5f5f5; }
+        .table tbody tr:hover { background: #fafbff; }
+        .badge-status { font-size: 11px; font-weight: 500;
+                        padding: 3px 9px; border-radius: 4px; }
+        .site-tag { display: inline-flex; align-items: center;
+                    gap: 3px; font-size: 11px; padding: 2px 7px;
+                    border-radius: 3px; margin: 1px; border: 1px solid; }
+        .modal-section-label { font-size: 11px; font-weight: 600;
+                               color: #888; text-transform: uppercase;
+                               letter-spacing: 0.5px; margin-bottom: 10px; }
+        .detail-key { font-size: 11px; color: #999;
+                      text-transform: uppercase; letter-spacing: 0.3px;
+                      margin-bottom: 3px; }
+        .detail-val { font-size: 13px; color: #222; font-weight: 500; }
+        .site-detail-card { border: 1px solid #eee; border-radius: 6px;
+                            padding: 0.75rem; margin-bottom: 0.5rem; }
+        .inv-avatar { width: 30px; height: 30px; border-radius: 50%;
+                      background: #e8f0fe; color: #3b5bdb;
+                      display: inline-flex; align-items: center;
+                      justify-content: center; font-size: 11px;
+                      font-weight: 700; flex-shrink: 0; }
+        .readonly-notice { background: #f0f9ff; border: 1px solid #bae6fd;
+                           border-radius: 6px; padding: 0.5rem 0.75rem;
+                           font-size: 12px; color: #0369a1;
+                           margin-bottom: 1rem; }
+        .search-box { position: relative; }
+        .search-box input { padding: 5px 10px 5px 30px;
+                            border: 1px solid #ddd; border-radius: 6px;
+                            font-size: 13px; width: 220px;
+                            outline: none; background: #fafafa; }
+        .search-box input:focus { border-color: #0d6efd;
+                                  background: #fff; }
+        .search-box svg { position: absolute; left: 8px; top: 50%;
+                          transform: translateY(-50%);
+                          pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Topbar -->
+    <div class="topbar d-flex align-items-center
+                justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <span class="brand">LifeSci360</span>
+            <span class="text-muted" style="font-size:13px">
+                Research Scientist
+            </span>
+        </div>
+        <form method="post" asp-page="/Account/Logout">
+            @Html.AntiForgeryToken()
+            <button type="submit"
+                    class="btn btn-outline-danger btn-sm">
+                Logout
+            </button>
+        </form>
+    </div>
+
+    <div class="container-fluid px-4 py-4" style="max-width:1300px">
+
+        <!-- Heading -->
+        <div class="mb-4">
+            <h5 class="fw-bold mb-0">Research Scientist Dashboard</h5>
+            <p class="text-muted mb-0" style="font-size:13px">
+                View study protocols, sites and investigators
+            </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Total Protocols</div>
+                    <div class="stat-value">@Model.Protocols.Count</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Active</div>
+                    <div class="stat-value text-success">
+                        @Model.ActiveCount
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Inactive</div>
+                    <div class="stat-value text-warning">
+                        @Model.InactiveCount
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value text-secondary">
+                        @Model.CompletedCount
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Protocols Table -->
+        <div class="main-card">
+            <div class="toolbar">
+                <span style="font-size:13px; font-weight:600;
+                             color:#333">
+                    Study Protocols
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="search-box">
+                        <svg width="14" height="14"
+                             viewBox="0 0 16 16" fill="none">
+                            <circle cx="6.5" cy="6.5" r="5"
+                                    stroke="#aaa" stroke-width="1.5"/>
+                            <path d="M10.5 10.5L14 14"
+                                  stroke="#aaa" stroke-width="1.5"
+                                  stroke-linecap="round"/>
+                        </svg>
+                        <input type="text" id="searchInput"
+                               placeholder="Search protocols..."
+                               onkeyup="filterTable()" />
+                    </div>
+                    <span class="badge bg-primary bg-opacity-10
+                                 text-primary"
+                          style="font-size:12px; padding:5px 10px">
+                        Read Only
+                    </span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0" id="protocolTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Phase Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Sites</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Protocols.Any())
+                        {
+                            <tr>
+                                <td colspan="8"
+                                    class="text-center py-4 text-muted">
+                                    No protocols available.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var p in Model.Protocols)
+                        {
+                            <tr>
+                                <td class="text-muted"
+                                    style="font-size:12px">
+                                    #@p.ProtocolID
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">
+                                        @p.Title
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(
+                                        p.Description))
+                                    {
+                                        <div class="text-muted"
+                                             style="font-size:11px">
+                                            @p.Description
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge badge-status
+                                          @Model.GetProtocolBadge(
+                                              p.Status)">
+                                        @p.Status
+                                    </span>
+                                </td>
+                                <td style="font-size:13px">
+                                    @p.Phase
+                                </td>
+                                <td class="text-muted"
+                                    style="font-size:12px">
+                                    @(p.StartDate.ToString("dd MMM yyyy"))
+                                </td>
+                                <td class="text-muted"
+                                    style="font-size:12px">
+                                    @(p.EndDate.ToString("dd MMM yyyy"))
+                                </td>
+                                <td style="min-width:140px">
+                                    @if (!p.Sites.Any())
+                                    {
+                                        <span class="text-muted"
+                                              style="font-size:12px">
+                                            No sites
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var s in p.Sites)
+                                        {
+                                            <div style="margin-bottom:2px">
+                                                <span class="site-tag
+                                                      @Model.GetSiteBadge(
+                                                          s.Status)">
+                                                    @s.Name
+                                                </span>
+                                            </div>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    <button type="button"
+                                            class="btn btn-sm
+                                            btn-outline-secondary"
+                                            style="font-size:11px;
+                                            padding:2px 8px"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#view-@p.ProtocolID">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- VIEW MODALS — PER PROTOCOL -->
+    @foreach (var p in Model.Protocols)
+    {
+        <div class="modal fade"
+             id="view-@p.ProtocolID" tabindex="-1">
+            <div class="modal-dialog modal-lg
+                        modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-sm">
+                    <div class="modal-header py-3">
+                        <div>
+                            <h6 class="modal-title fw-semibold mb-1">
+                                @p.Title
+                            </h6>
+                            <span class="badge badge-status
+                                  @Model.GetProtocolBadge(p.Status)">
+                                @p.Status
+                            </span>
+                        </div>
+                        <button type="button" class="btn-close"
+                                data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body px-4 py-3">
+
+                   
+
+                        <!-- Protocol Info -->
+                        <p class="modal-section-label">
+                            Protocol Information
+                        </p>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <div class="detail-key">Protocol ID</div>
+                                <div class="detail-val">
+                                    #@p.ProtocolID
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="detail-key">Phase Type</div>
+                                <div class="detail-val">@p.Phase</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="detail-key">Status</div>
+                                <div class="detail-val">
+                                    <span class="badge badge-status
+                                          @Model.GetProtocolBadge(
+                                              p.Status)">
+                                        @p.Status
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="detail-key">Duration</div>
+                                <div class="detail-val">
+                                    @((p.EndDate - p.StartDate).Days)
+                                    days
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="detail-key">Start Date</div>
+                                <div class="detail-val">
+                                    @(p.StartDate.ToString("dd MMM yyyy"))
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="detail-key">End Date</div>
+                                <div class="detail-val">
+                                    @(p.EndDate.ToString("dd MMM yyyy"))
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="detail-key">Created</div>
+                                <div class="detail-val">
+                                    @(p.CreatedDate.ToString(
+                                        "dd MMM yyyy"))
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(p.Description))
+                            {
+                                <div class="col-12">
+                                    <div class="detail-key">
+                                        Description
+                                    </div>
+                                    <div class="detail-val fw-normal
+                                                text-muted">
+                                        @p.Description
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Sites & Investigators -->
+                        <p class="modal-section-label">
+                            Sites &amp; Investigators
+                        </p>
+
+                        @if (!p.Sites.Any())
+                        {
+                            <p class="text-muted small">
+                                No sites assigned to this protocol.
+                            </p>
+                        }
+                        else
+                        {
+                            <div class="row g-2">
+                                @foreach (var s in p.Sites)
+                                {
+                                    <div class="col-md-6">
+                                        <div class="site-detail-card">
+                                            <div class="d-flex
+                                                 justify-content-between
+                                                 align-items-start mb-2">
+                                                <div>
+                                                    <div class="fw-semibold"
+                                                         style="font-size:13px">
+                                                        @s.Name
+                                                    </div>
+                                                    <div class="text-muted"
+                                                         style="font-size:12px">
+                                                        @s.Location
+                                                    </div>
+                                                </div>
+                                                <span class="badge
+                                                      badge-status
+                                                      @Model.GetSiteBadge(
+                                                          s.Status)">
+                                                    @s.Status
+                                                </span>
+                                            </div>
+                                            <div class="pt-2"
+                                                 style="border-top:
+                                                 1px solid #f0f0f0">
+                                                <div class="detail-key mb-1">
+                                                    Investigator
+                                                </div>
+                                                @if (s.Investigator != null)
+                                                {
+                                                    <div class="d-flex
+                                                         align-items-center
+                                                         gap-2">
+                                                        <div class="inv-avatar">
+                                                            @Model.GetInitial(
+                                                                s.Investigator.FullName)
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-semibold"
+                                                                 style="font-size:12px">
+                                                                @s.Investigator.FullName
+                                                            </div>
+                                                            <div class="text-muted"
+                                                                 style="font-size:11px">
+                                                                @s.Investigator.Email
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted"
+                                                          style="font-size:12px;
+                                                          font-style:italic">
+                                                        Not assigned
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary"
+                                data-bs-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function filterTable() {
+            const val = document.getElementById('searchInput')
+                            .value.toLowerCase();
+            document.querySelectorAll('#protocolTable tbody tr')
+                .forEach(row => {
+                    row.style.display =
+                        row.innerText.toLowerCase().includes(val)
+                        ? '' : 'none';
+                });
+        }
+    </script>
+</body>
+</html>
