@@ -58,3 +58,4 @@ appsettings.Development.json
 .vs/                          
 bin/                          
 obj/                          
+/LifeSci360.Identity.API/Data/AppIdentityDbContext.cs

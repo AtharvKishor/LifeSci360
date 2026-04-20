@@ -69,7 +69,7 @@ namespace LifeSci360.Identity.API.Pages.Account
                     "Admin" => RedirectToPage("/Admin/Index"),
                     "ResearchScientist" => RedirectToPage("/Dashboard/ResearchScientist"),
                     "LabTechnician" => RedirectToPage("/Dashboard/LabTechnician"),
-                    "ClinicalTrialManager" => RedirectToPage("/Dashboard/ClinicalManager"),
+                    "ClinicalTrialManager" => RedirectToPage("/Dashboard/ClinicalManagerProtocol"),
                     "RegulatoryOfficer" => RedirectToPage("/Dashboard/RegulatoryOfficer"),
                     "DataManager" => RedirectToPage("/Dashboard/DataManager"),
                     _ => RedirectToPage("/Index")
