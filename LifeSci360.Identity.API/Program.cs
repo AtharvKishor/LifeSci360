@@ -1,29 +1,26 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using LifeSci360.Identity.API.Data;
 using LifeSci360.Identity.API.Models;
+using LifeSci360.Identity.API.Services;      // ✅ ADD
+using LifeSci360.Shared.Services;             // ✅ ADD
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 
-// Database
+// -------------------- DATABASE --------------------
 builder.Services.AddDbContext<AppIdentityDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("dbcs")));
 
-// Identity with ApplicationRole
+// -------------------- IDENTITY --------------------
 builder.Services.AddIdentity<User, ApplicationRole>(options =>
 {
-    // Password policies
     options.Password.RequiredLength = 10;
     options.Password.RequireUppercase = true;
     options.Password.RequireDigit = true;
     options.Password.RequireNonAlphanumeric = true;
 
-    // Lockout policy
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 
@@ -32,7 +29,7 @@ builder.Services.AddIdentity<User, ApplicationRole>(options =>
 .AddEntityFrameworkStores<AppIdentityDbContext>()
 .AddDefaultTokenProviders();
 
-// Cookie settings for Razor Pages
+// -------------------- COOKIE SETTINGS --------------------
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -41,18 +38,19 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
+// -------------------- ✅ REQUIRED SERVICE REGISTRATION ✅ --------------------
+builder.Services.AddScoped<IPatientService, PatientService>();
+
 var app = builder.Build();
 
-// Seed Roles + Admin on startup
+// -------------------- ROLE + ADMIN SEED --------------------
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider
-                          .GetRequiredService<RoleManager<ApplicationRole>>();
-    var userManager = scope.ServiceProvider
-                          .GetRequiredService<UserManager<User>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
-    // Seed all 6 roles into Roles table
-    string[] roles = {
+    string[] roles =
+    {
         "Admin",
         "ResearchScientist",
         "LabTechnician",
@@ -75,7 +73,6 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // Seed default Admin user
     var adminEmail = "admin@lifesci360.com";
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
@@ -91,9 +88,7 @@ using (var scope = app.Services.CreateScope())
             EmailConfirmed = true
         };
 
-        // Create admin with a strong default password
         var result = await userManager.CreateAsync(admin, "Admin@12345!");
-
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(admin, "Admin");
@@ -101,6 +96,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// -------------------- PIPELINE --------------------
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -108,9 +104,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-
 app.UseStaticFiles();
 app.UseRouting();
 
