@@ -26,6 +26,12 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         [BindProperty]
         public DateTime NewVisitDate { get; set; }
 
+        [BindProperty]
+        public string NewVisitName { get; set; } = string.Empty;
+
+        [BindProperty]
+        public DateTime NewVisitScheduledDate { get; set; }
+
         public async Task OnGetAsync(Guid patientId)
         {
             Patient = await _patientService.GetPatientByIdAsync(patientId);
@@ -53,6 +59,33 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         public async Task<IActionResult> OnPostCompleteVisitAsync(Guid patientId)
         {
             await _patientService.CompleteVisitAsync(EditVisitId);
+            return RedirectToPage(new { patientId });
+        }
+
+        public async Task<IActionResult> OnPostAddVisitAsync(Guid patientId)
+        {
+            if (string.IsNullOrEmpty(NewVisitName) ||
+                NewVisitScheduledDate == default)
+                return RedirectToPage(new { patientId });
+
+            Patient = await _patientService.GetPatientByIdAsync(patientId);
+
+            await _patientService.AddVisitAsync(new VisitDto
+            {
+                VisitID = Guid.NewGuid(),
+                PatientID = patientId,
+                ProtocolID = Patient!.ProtocolID,
+                ScheduledDate = NewVisitScheduledDate,
+                Status = "Scheduled",
+                Notes = NewVisitName
+            });
+
+            return RedirectToPage(new { patientId });
+        }
+
+        public async Task<IActionResult> OnPostDeleteVisitAsync(Guid patientId)
+        {
+            await _patientService.DeleteVisitAsync(EditVisitId);
             return RedirectToPage(new { patientId });
         }
     }

@@ -165,6 +165,28 @@ namespace LifeSci360.Identity.API.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task AddVisitAsync(VisitDto dto)
+        {
+            _context.Visits.Add(new Visit
+            {
+                VisitID = Guid.NewGuid(),
+                PatientID = dto.PatientID,
+                ProtocolID = dto.ProtocolID,
+                ScheduledDate = dto.ScheduledDate,
+                Status = "Scheduled",
+                Notes = dto.Notes
+            });
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteVisitAsync(Guid visitId)
+        {
+            var visit = await _context.Visits.FindAsync(visitId);
+            if (visit == null) return;
+            _context.Visits.Remove(visit);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<List<KeyValuePair<Guid, string>>> GetProtocolsAsync()
         {
             return await _context.Protocols

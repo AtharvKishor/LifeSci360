@@ -31,6 +31,12 @@
         .dp-day.sel{background:#0d6efd;color:#fff;font-weight:500}
         .dp-day.today{color:#0d6efd;font-weight:600}
         .dp-day.empty{cursor:default;pointer-events:none}
+        .dp-field{display:flex;align-items:center;border:1px solid #dee2e6;border-radius:6px;background:#fff;overflow:hidden;height:32px;min-width:160px}
+        .dp-field:hover{border-color:#0d6efd}
+        .dp-text{flex:1;padding:4px 10px;font-size:13px;color:#6c757d;background:none;border:none;outline:none;cursor:default;white-space:nowrap}
+        .dp-text.has-val{color:#212529}
+        .dp-icon-btn{padding:4px 8px;background:none;border:none;border-left:1px solid #dee2e6;cursor:pointer;color:#6c757d;display:flex;align-items:center}
+        .dp-icon-btn:hover{background:#f0f4ff;color:#0d6efd}
     </style>
 </head>
 <body style="background:#f0f2f5">
@@ -76,93 +82,208 @@
             </div>
         }
 
-        @if (Model.UpcomingVisits.Any())
-        {
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="fw-semibold mb-0">Upcoming Visits</h6>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-4 small fw-semibold"
-                                    style="width:200px">Visit</th>
-                                <th class="small fw-semibold"
-                                    style="width:300px">Scheduled Date</th>
-                                <th class="small fw-semibold"
-                                    style="width:150px">Status</th>
-                                <th class="small fw-semibold text-end pe-4">
-                                    Action
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var v in Model.UpcomingVisits)
-                            {
-                                <tr>
-                                    <td class="ps-4 small fw-semibold">
-                                        @v.Notes
-                                    </td>
-                                    <td class="small text-muted">
-                                        <span id="text-@v.VisitID">
-                                            @v.ScheduledDate.ToString("dd MMM yyyy")
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3
+                d-flex justify-content-between align-items-center">
+                <h6 class="fw-semibold mb-0">Upcoming Visits</h6>
+                <button type="button"
+                        class="btn btn-primary btn-sm"
+                        onclick="toggleAddRow()">
+                    + Add Visit
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4 small fw-semibold"
+                                style="width:200px">Visit</th>
+                            <th class="small fw-semibold"
+                                style="width:300px">Scheduled Date</th>
+                            <th class="small fw-semibold"
+                                style="width:150px">Status</th>
+                            <th class="small fw-semibold text-end pe-4">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- Add Visit inline row -->
+                        <tr id="addVisitRow" class="d-none table-light">
+                            <form method="post"
+                                  asp-page-handler="AddVisit"
+                                  asp-route-patientId="@Model.Patient?.PatientID"
+                                  id="addVisitForm">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       asp-for="NewVisitScheduledDate"
+                                       id="newVisitDateHidden" />
+                            </form>
+                            <td class="ps-4">
+                                <input asp-for="NewVisitName"
+                                       form="addVisitForm"
+                                       class="form-control form-control-sm"
+                                       placeholder="Visit name" />
+                            </td>
+                            <td>
+                                <div style="position:relative">
+                                    <div class="dp-field">
+                                        <span class="dp-text"
+                                              id="newVisitDateText">
+                                            dd mmm yyyy
                                         </span>
-                                        <div id="calRow-@v.VisitID"
-                                             class="d-none mt-2"
-                                             style="position:relative;left:0">
-                                            <div class="dp-box">
-                                                <div class="dp-header">
+                                        <button type="button"
+                                                class="dp-icon-btn"
+                                                onclick="toggleNVPicker(event)">
+                                            <svg width="14" height="14"
+                                                 viewBox="0 0 16 16" fill="none">
+                                                <rect x="1" y="3" width="14"
+                                                      height="12" rx="2"
+                                                      stroke="currentColor"
+                                                      stroke-width="1.2"
+                                                      fill="none"/>
+                                                <path d="M1 7h14"
+                                                      stroke="currentColor"
+                                                      stroke-width="1.2"/>
+                                                <path d="M5 1v4M11 1v4"
+                                                      stroke="currentColor"
+                                                      stroke-width="1.2"
+                                                      stroke-linecap="round"/>
+                                                <circle cx="5" cy="10" r="1"
+                                                        fill="currentColor"/>
+                                                <circle cx="8" cy="10" r="1"
+                                                        fill="currentColor"/>
+                                                <circle cx="11" cy="10" r="1"
+                                                        fill="currentColor"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="dp-box d-none" id="nvPopup">
+                                        <div class="dp-header">
+                                            <button type="button"
+                                                    class="dp-nav-btn"
+                                                    onclick="event.stopPropagation();nvNav(-1)">
+                                                &#8592;
+                                            </button>
+                                            <div style="display:flex;gap:6px">
+                                                <div class="dp-sel">
                                                     <button type="button"
-                                                            class="dp-nav-btn"
-                                                            onclick="vNav('@v.VisitID',-1)">
-                                                        &#8592;
+                                                            class="dp-sel-btn"
+                                                            onclick="toggleNVDrop('m',event)">
+                                                        <span id="nvML"></span>
+                                                        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 3 3-3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
                                                     </button>
-                                                    <div style="display:flex;gap:6px">
-                                                        <div class="dp-sel">
-                                                            <button type="button"
-                                                                    class="dp-sel-btn"
-                                                                    onclick="toggleVDrop('@v.VisitID','m',event)">
-                                                                <span id="vML-@v.VisitID"></span>
-                                                                <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 3 3-3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
-                                                            </button>
-                                                            <div class="dp-dropdown"
-                                                                 id="vMD-@v.VisitID">
-                                                            </div>
-                                                        </div>
-                                                        <div class="dp-sel">
-                                                            <button type="button"
-                                                                    class="dp-sel-btn"
-                                                                    onclick="toggleVDrop('@v.VisitID','y',event)">
-                                                                <span id="vYL-@v.VisitID"></span>
-                                                                <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 3 3-3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
-                                                            </button>
-                                                            <div class="dp-dropdown"
-                                                                 id="vYD-@v.VisitID">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <button type="button"
-                                                            class="dp-nav-btn"
-                                                            onclick="vNav('@v.VisitID',1)">
-                                                        &#8594;
-                                                    </button>
+                                                    <div class="dp-dropdown" id="nvMD"></div>
                                                 </div>
-                                                <div class="dp-days-header"
-                                                     id="vDH-@v.VisitID"></div>
-                                                <div class="dp-days"
-                                                     id="vDD-@v.VisitID"></div>
+                                                <div class="dp-sel">
+                                                    <button type="button"
+                                                            class="dp-sel-btn"
+                                                            onclick="toggleNVDrop('y',event)">
+                                                        <span id="nvYL"></span>
+                                                        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 3 3-3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+                                                    </button>
+                                                    <div class="dp-dropdown" id="nvYD"></div>
+                                                </div>
                                             </div>
+                                            <button type="button"
+                                                    class="dp-nav-btn"
+                                                    onclick="event.stopPropagation();nvNav(1)">
+                                                &#8594;
+                                            </button>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-primary
-                                            bg-opacity-10 text-primary
-                                            px-2 py-1 small">
-                                            @v.Status
-                                        </span>
-                                    </td>
-                                    <td class="text-end pe-4">
+                                        <div class="dp-days-header" id="nvDH"></div>
+                                        <div class="dp-days" id="nvDD"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary
+                                    bg-opacity-10 text-primary
+                                    px-2 py-1 small">
+                                    Scheduled
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button type="submit"
+                                            form="addVisitForm"
+                                            class="btn btn-success btn-sm px-3">
+                                        Save
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            onclick="toggleAddRow()">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        @foreach (var v in Model.UpcomingVisits)
+                        {
+                            <tr>
+                                <td class="ps-4 small fw-semibold">
+                                    @v.Notes
+                                </td>
+                                <td class="small text-muted">
+                                    <span id="text-@v.VisitID">
+                                        @v.ScheduledDate.ToString("dd MMM yyyy")
+                                    </span>
+                                    <div id="calRow-@v.VisitID"
+                                         class="d-none mt-2"
+                                         style="position:relative;left:0">
+                                        <div class="dp-box">
+                                            <div class="dp-header">
+                                                <button type="button"
+                                                        class="dp-nav-btn"
+                                                        onclick="vNav('@v.VisitID',-1)">
+                                                    &#8592;
+                                                </button>
+                                                <div style="display:flex;gap:6px">
+                                                    <div class="dp-sel">
+                                                        <button type="button"
+                                                                class="dp-sel-btn"
+                                                                onclick="toggleVDrop('@v.VisitID','m',event)">
+                                                            <span id="vML-@v.VisitID"></span>
+                                                            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 3 3-3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+                                                        </button>
+                                                        <div class="dp-dropdown"
+                                                             id="vMD-@v.VisitID"></div>
+                                                    </div>
+                                                    <div class="dp-sel">
+                                                        <button type="button"
+                                                                class="dp-sel-btn"
+                                                                onclick="toggleVDrop('@v.VisitID','y',event)">
+                                                            <span id="vYL-@v.VisitID"></span>
+                                                            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3l3 3 3-3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+                                                        </button>
+                                                        <div class="dp-dropdown"
+                                                             id="vYD-@v.VisitID"></div>
+                                                    </div>
+                                                </div>
+                                                <button type="button"
+                                                        class="dp-nav-btn"
+                                                        onclick="vNav('@v.VisitID',1)">
+                                                    &#8594;
+                                                </button>
+                                            </div>
+                                            <div class="dp-days-header"
+                                                 id="vDH-@v.VisitID"></div>
+                                            <div class="dp-days"
+                                                 id="vDD-@v.VisitID"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary
+                                        bg-opacity-10 text-primary
+                                        px-2 py-1 small">
+                                        @v.Status
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex gap-2 justify-content-end">
                                         <button type="button"
                                                 class="btn btn-sm btn-outline-secondary"
                                                 id="editBtn-@v.VisitID"
@@ -188,14 +309,38 @@
                                                 Save
                                             </button>
                                         </form>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                                        <form method="post"
+                                              asp-page-handler="DeleteVisit"
+                                              asp-route-patientId="@Model.Patient?.PatientID"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Delete this visit?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden"
+                                                   name="EditVisitId"
+                                                   value="@v.VisitID" />
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (!Model.UpcomingVisits.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center
+                                    text-muted small py-4">
+                                    No upcoming visits.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-        }
+        </div>
 
         @if (Model.CompletedVisits.Any())
         {
@@ -239,17 +384,6 @@
             </div>
         }
 
-        @if (!Model.UpcomingVisits.Any() && !Model.CompletedVisits.Any())
-        {
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-5">
-                    <p class="text-muted mb-0">
-                        No visits found for this patient.
-                    </p>
-                </div>
-            </div>
-        }
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -260,6 +394,93 @@
         const now=new Date();
         const vState={};
 
+        // ── Add Visit Row ──
+        function toggleAddRow(){
+            const row=document.getElementById('addVisitRow');
+            row.classList.toggle('d-none');
+            if(!row.classList.contains('d-none')){
+                initNV();
+                // auto open calendar
+                document.getElementById('nvPopup').classList.remove('d-none');
+            }
+        }
+
+        // ── New Visit Calendar ──
+        let nvY=now.getFullYear(),nvM=now.getMonth(),nvD=null;
+
+        function initNV(){buildNVDrops();renderNVCal();}
+
+        function buildNVDrops(){
+            let mh='';
+            MFULL.forEach((m,i)=>mh+=`<div class="dp-opt${i===nvM?' sel':''}" onclick="event.stopPropagation();nvPickM(${i})">${m}</div>`);
+            document.getElementById('nvMD').innerHTML=mh;
+            let yh='';
+            for(let y=now.getFullYear()+5;y>=now.getFullYear();y--)
+                yh+=`<div class="dp-opt${y===nvY?' sel':''}" onclick="event.stopPropagation();nvPickY(${y})">${y}</div>`;
+            document.getElementById('nvYD').innerHTML=yh;
+        }
+
+        function renderNVCal(){
+            document.getElementById('nvML').textContent=MS[nvM];
+            document.getElementById('nvYL').textContent=nvY;
+            const first=new Date(nvY,nvM,1).getDay();
+            const dim=new Date(nvY,nvM+1,0).getDate();
+            let hh='';
+            DH.forEach(d=>hh+=`<div class="dp-dh">${d}</div>`);
+            document.getElementById('nvDH').innerHTML=hh;
+            let h='';
+            for(let i=0;i<first;i++) h+=`<div class="dp-day empty"></div>`;
+            for(let d=1;d<=dim;d++){
+                const iT=d===now.getDate()&&nvM===now.getMonth()&&nvY===now.getFullYear();
+                const iS=d===nvD;
+                h+=`<div class="dp-day${iT?' today':''}${iS?' sel':''}" onclick="event.stopPropagation();nvPickD(${d})">${d}</div>`;
+            }
+            document.getElementById('nvDD').innerHTML=h;
+        }
+
+        function toggleNVPicker(e){
+            e.stopPropagation();
+            const p=document.getElementById('nvPopup');
+            p.classList.toggle('d-none');
+            if(!p.classList.contains('d-none')) initNV();
+        }
+
+        function toggleNVDrop(t,e){
+            e.stopPropagation();
+            const id=t==='m'?'nvMD':'nvYD';
+            const el=document.getElementById(id);
+            const was=el.classList.contains('open');
+            document.querySelectorAll('.dp-dropdown.open')
+                .forEach(d=>d.classList.remove('open'));
+            if(!was) el.classList.add('open');
+        }
+
+        function nvPickM(m){
+            nvM=m;buildNVDrops();renderNVCal();
+            document.getElementById('nvMD').classList.remove('open');
+        }
+        function nvPickY(y){
+            nvY=y;buildNVDrops();renderNVCal();
+            document.getElementById('nvYD').classList.remove('open');
+        }
+        function nvPickD(d){
+            nvD=d;renderNVCal();
+            const mm=String(nvM+1).padStart(2,'0');
+            const dd=String(d).padStart(2,'0');
+            document.getElementById('newVisitDateHidden').value=`${nvY}-${mm}-${dd}`;
+            document.getElementById('newVisitDateText').textContent=`${d} ${MS[nvM]} ${nvY}`;
+            document.getElementById('newVisitDateText').classList.add('has-val');
+            setTimeout(()=>document.getElementById('nvPopup')
+                .classList.add('d-none'),150);
+        }
+        function nvNav(dir){
+            nvM+=dir;
+            if(nvM<0){nvM=11;nvY--;}
+            if(nvM>11){nvM=0;nvY++;}
+            buildNVDrops();renderNVCal();
+        }
+
+        // ── Existing visit edit ──
         function enableEdit(vid,y,m,d){
             document.getElementById(`calRow-${vid}`).classList.remove('d-none');
             document.getElementById(`save-${vid}`).classList.remove('d-none');
@@ -267,8 +488,7 @@
             vState[vid]={y,m:m-1,d,
                 minY:now.getFullYear(),
                 maxY:now.getFullYear()+5};
-            buildVDrops(vid);
-            renderVCal(vid);
+            buildVDrops(vid);renderVCal(vid);
         }
 
         function buildVDrops(vid){
@@ -345,6 +565,11 @@
             if(!e.target.closest('.dp-sel'))
                 document.querySelectorAll('.dp-dropdown.open')
                     .forEach(d=>d.classList.remove('open'));
+            if(!e.target.closest('#nvPopup') &&
+               !e.target.closest('.dp-icon-btn') &&
+               !e.target.closest('.dp-sel'))
+                document.getElementById('nvPopup')
+                    ?.classList.add('d-none');
         });
     </script>
 </body>
