@@ -131,8 +131,8 @@ namespace LifeSci360.Identity.API.Data
                 entity.HasKey(p => p.PatientID);
                 entity.ToTable("Patients");
                 entity.Property(p => p.PatientID)
-                      .ValueGeneratedOnAdd();
-                entity.Property(p => p.Name)
+                      .HasDefaultValueSql("NEWSEQUENTIALID()");
+                entity.Property(p => p.FullName)
                       .IsRequired()
                       .HasMaxLength(200);
                 entity.Property(p => p.ContactInfo)
