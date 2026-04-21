@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using LifeSci360.Identity.API.Data;
 using LifeSci360.Identity.API.Models;
 using LifeSci360.Identity.API.Services;      // ✅ ADD
@@ -11,9 +8,6 @@ using LifeSci360.Shared.Services;             // ✅ ADD
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
-builder.Services.AddControllers(); 
-builder.Services.AddControllers();
-builder.Services.AddScoped<IProtocolService, ProtocolService>(); 
 
 // -------------------- DATABASE --------------------
 builder.Services.AddDbContext<AppIdentityDbContext>(options =>
@@ -110,13 +104,11 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();  
-app.UseRouting();      
+app.UseStaticFiles();
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.MapControllers(); 
-
 app.Run();

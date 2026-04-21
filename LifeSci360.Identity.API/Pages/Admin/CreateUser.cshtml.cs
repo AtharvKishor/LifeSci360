@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using LifeSci360.Identity.API.Models;
 using LifeSci360.Identity.API.Data;
 
@@ -24,17 +25,12 @@ namespace LifeSci360.Identity.API.Pages.Admin
             _context = context;
         }
 
-        public List<string> RoleList { get; set; } = new();
-        public string ErrorMessage { get; set; } = string.Empty;
-        public string SuccessMessage { get; set; } = string.Empty;
+        [BindProperty]
+        public CreateUserInput Input { get; set; }
 
-        // Form fields
-        [BindProperty] public string FullName { get; set; } = string.Empty;
-        [BindProperty] public string Email { get; set; } = string.Empty;
-        [BindProperty] public string PhoneNumber { get; set; } = string.Empty;
-        [BindProperty] public string Role { get; set; } = string.Empty;
-        [BindProperty] public string Password { get; set; } = string.Empty;
-        [BindProperty] public string ConfirmPassword { get; set; } = string.Empty;
+        public List<SelectListItem> RoleList { get; set; } = new();
+        public string SuccessMessage { get; set; }
+        public string ErrorMessage { get; set; }
 
         public void OnGet()
         {
@@ -45,65 +41,80 @@ namespace LifeSci360.Identity.API.Pages.Admin
         {
             LoadRoles();
 
-            // Validate passwords match
-            if (Password != ConfirmPassword)
-            {
-                ErrorMessage = "Passwords do not match.";
-                return Page();
-            }
+            if (!ModelState.IsValid) return Page();
 
             // Check email not already taken
-            var existing = await _userManager.FindByEmailAsync(Email);
+            var existing = await _userManager.FindByEmailAsync(Input.Email);
             if (existing != null)
             {
                 ErrorMessage = "A user with this email already exists.";
                 return Page();
             }
 
-            // Create the user
-            var newUser = new User
+            // Validate role exists
+            if (!await _roleManager.RoleExistsAsync(Input.Role))
             {
-                UserName = Email,
-                Email = Email,
-                FullName = FullName,
-                PhoneNumber = PhoneNumber,
+                ErrorMessage = $"Role '{Input.Role}' does not exist.";
+                return Page();
+            }
+
+            var user = new User
+            {
+                UserName = Input.Email,
+                Email = Input.Email,
+                FullName = Input.FullName,
+                PhoneNumber = Input.PhoneNumber,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
                 EmailConfirmed = true
             };
 
-            var result = await _userManager.CreateAsync(newUser, Password);
+            var result = await _userManager.CreateAsync(user, Input.TempPassword);
 
-            if (!result.Succeeded)
+            if (result.Succeeded)
             {
-                ErrorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+                // Assign role via Roles table
+                await _userManager.AddToRoleAsync(user, Input.Role);
+
+                // Immutable Audit Log
+                var adminUser = await _userManager.GetUserAsync(User);
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    UserID = adminUser?.Id ?? "system",
+                    Action = $"Admin provisioned user: {Input.Email} with role: {Input.Role}",
+                    Timestamp = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+
+                SuccessMessage = $"User '{Input.FullName}' provisioned successfully with role '{Input.Role}'.";
+                Input = new CreateUserInput(); // clear form
                 return Page();
             }
 
-            // Assign role
-            if (!string.IsNullOrEmpty(Role))
-                await _userManager.AddToRoleAsync(newUser, Role);
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
 
-            // Audit log
-            var adminUser = await _userManager.GetUserAsync(User);
-            _context.AuditLogs.Add(new AuditLog
-            {
-                UserID = adminUser?.Id ?? "system",
-                Action = $"Admin created new user: {Email} with role: {Role}",
-                Timestamp = DateTime.UtcNow
-            });
-            await _context.SaveChangesAsync();
-
-            // Redirect back to manage users with success
-            return RedirectToPage("/Admin/ManageUsers");
+            return Page();
         }
 
         private void LoadRoles()
         {
             RoleList = _roleManager.Roles
-                .Where(r => r.IsActive && r.Name != "Admin")
-                .Select(r => r.Name!)
-                .ToList();
+                .Where(r => r.IsActive)
+                .Select(r => new SelectListItem
+                {
+                    Value = r.Name,
+                    Text = r.Name
+                }).ToList();
         }
+    }
+
+    public class CreateUserInput
+    {
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Role { get; set; }
+        public string TempPassword { get; set; }
     }
 }

@@ -5,8 +5,6 @@ namespace LifeSci360.Identity.API.Models
     public class Patient
     {
         [Key]
-        [Required, MaxLength(50)]
-        public string EnrollmentStatus { get; set; } = "Pending";
         public Guid PatientID { get; set; }
         public Guid ProtocolID { get; set; }
         public string FullName { get; set; }
