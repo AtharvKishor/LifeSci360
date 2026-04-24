@@ -149,6 +149,30 @@ namespace LifeSci360.Identity.API.Migrations
                     b.ToTable("Protocols", (string)null);
                 });
 
+            modelBuilder.Entity("LifeSci360.Identity.API.Models.Sample", b =>
+                {
+                    b.Property<Guid>("SampleID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CollectedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PatientID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProtocolID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SampleID");
+
+                    b.ToTable("Samples");
+                });
+
             modelBuilder.Entity("LifeSci360.Identity.API.Models.User", b =>
                 {
                     b.Property<string>("Id")
