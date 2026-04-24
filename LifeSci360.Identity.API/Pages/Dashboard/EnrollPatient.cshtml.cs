@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace LifeSci360.Identity.API.Pages.Dashboard
 {
-    [Authorize(Roles = "ClinicalTrialManager")]
+    [Authorize(Roles = "ClinicalTrialManager,Admin")]
     public class EnrollPatientModel : PageModel
     {
         private readonly IPatientService _patientService;

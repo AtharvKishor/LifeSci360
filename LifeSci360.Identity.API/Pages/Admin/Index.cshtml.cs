@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using LifeSci360.Identity.API.Data;
 using LifeSci360.Identity.API.Models;
 
 namespace LifeSci360.Identity.API.Pages.Admin
@@ -9,19 +11,28 @@ namespace LifeSci360.Identity.API.Pages.Admin
     public class IndexModel : PageModel
     {
         private readonly UserManager<User> _userManager;
+        private readonly AppIdentityDbContext _context;
 
-        public IndexModel(UserManager<User> userManager)
+        public IndexModel(UserManager<User> userManager, AppIdentityDbContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
 
         public int TotalUsers { get; set; }
+        public int ActiveProtocols { get; set; }
+        public int PendingSamples { get; set; }
+        public int EnrolledPatients { get; set; }
         public List<UserViewModel> RecentUsers { get; set; } = new();
 
         public async Task OnGetAsync()
         {
             var users = _userManager.Users.ToList();
             TotalUsers = users.Count;
+
+            ActiveProtocols = await _context.Protocols.CountAsync(p => p.Status == "Active");
+            PendingSamples = await _context.Samples.CountAsync(s => s.Status == "Pending");
+            EnrolledPatients = await _context.Patients.CountAsync();
 
             foreach (var user in users.TakeLast(5))
             {

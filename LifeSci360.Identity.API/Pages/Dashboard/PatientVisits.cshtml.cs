@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace LifeSci360.Identity.API.Pages.Dashboard
 {
-    [Authorize(Roles = "ClinicalTrialManager")]
+    [Authorize(Roles = "ClinicalTrialManager,Admin")]
     public class PatientVisitsModel : PageModel
     {
         private readonly IPatientService _patientService;
@@ -40,12 +40,12 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
                 .GetVisitsByPatientAsync(patientId);
 
             UpcomingVisits = visits
-                .Where(v => v.ScheduledDate.Date >= today)
+                .Where(v => v.ScheduledDate.Date >= today && v.Status!="Completed")
                 .OrderBy(v => v.ScheduledDate)
                 .ToList();
 
             CompletedVisits = visits
-                .Where(v => v.ScheduledDate.Date < today)
+                .Where(v => v.ScheduledDate.Date < today || v.Status=="Completed")
                 .OrderByDescending(v => v.ScheduledDate)
                 .ToList();
         }

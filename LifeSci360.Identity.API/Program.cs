@@ -1,19 +1,18 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using LifeSci360.Identity.API.Data;
 using LifeSci360.Identity.API.Models;
-using LifeSci360.Identity.API.Services;      // ✅ ADD
-using LifeSci360.Shared.Services;             // ✅ ADD
+using LifeSci360.Identity.API.Services;
+using LifeSci360.Shared.Enums;
+using LifeSci360.Shared.Services;           
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 
-// -------------------- DATABASE --------------------
 builder.Services.AddDbContext<AppIdentityDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("dbcs")));
 
-// -------------------- IDENTITY --------------------
 builder.Services.AddIdentity<User, ApplicationRole>(options =>
 {
     options.Password.RequiredLength = 10;
@@ -29,7 +28,6 @@ builder.Services.AddIdentity<User, ApplicationRole>(options =>
 .AddEntityFrameworkStores<AppIdentityDbContext>()
 .AddDefaultTokenProviders();
 
-// -------------------- COOKIE SETTINGS --------------------
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -38,27 +36,26 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-// -------------------- ✅ REQUIRED SERVICE REGISTRATION ✅ --------------------
 builder.Services.AddScoped<IPatientService, PatientService>();
 
 var app = builder.Build();
 
-// -------------------- ROLE + ADMIN SEED --------------------
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
-    string[] roles =
-    {
-        "Admin",
-        "ResearchScientist",
-        "LabTechnician",
-        "ClinicalTrialManager",
-        "RegulatoryOfficer",
-        "DataManager"
-    };
+    //string[] roles =
+    //{
+    //    "Admin",
+    //    "ResearchScientist",
+    //    "LabTechnician",
+    //    "ClinicalTrialManager",
+    //    "RegulatoryOfficer",
+    //    "DataManager"
+    //};
 
+    string[] roles = Enum.GetNames(typeof(UserRole));
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
@@ -91,12 +88,10 @@ using (var scope = app.Services.CreateScope())
         var result = await userManager.CreateAsync(admin, "Admin@12345!");
         if (result.Succeeded)
         {
-            await userManager.AddToRoleAsync(admin, "Admin");
+            await userManager.AddToRoleAsync(admin, nameof(UserRole.Admin));
         }
     }
 }
-
-// -------------------- PIPELINE --------------------
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

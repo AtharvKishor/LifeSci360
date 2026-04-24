@@ -88,7 +88,8 @@ namespace LifeSci360.Identity.API.Pages.Admin
 
                 SuccessMessage = $"User '{Input.FullName}' provisioned successfully with role '{Input.Role}'.";
                 Input = new CreateUserInput(); // clear form
-                return Page();
+                //return Page();
+                return RedirectToPage("/Admin/Index");
             }
 
             foreach (var error in result.Errors)

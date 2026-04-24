@@ -18,11 +18,11 @@
     <!-- Top Navbar -->
     <nav class="navbar navbar-expand-lg navbar-white bg-white border-bottom shadow-sm px-4">
         <span class="navbar-brand fw-semibold text-primary">LifeSci360</span>
-        <span class="text-muted small ms-2">/ Admin Dashboard</span>
         <div class="ms-auto d-flex align-items-center gap-3">
-            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
-                Admin
-            </span>
+            <a asp-page="/Dashboard/ClinicalManager" class="btn btn-outline-primary btn-sm px-3">
+                Trial Manager
+            </a>
+            
             <form method="post" asp-page="/Account/Logout">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-outline-danger btn-sm">
@@ -36,10 +36,7 @@
 
         <!-- Page Header -->
         <div class="mb-4">
-            <h5 class="fw-semibold mb-1">Dashboard Overview</h5>
-            <p class="text-muted small mb-0">
-                Welcome back. Here's what's happening across LifeSci360.
-            </p>
+            <h5 class="fw-semibold mb-1">Admin Dashboard </h5>
         </div>
 
         <!-- Stats Cards -->
@@ -48,7 +45,7 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <p class="text-muted small mb-1">Total Users</p>
-                        <h3 class="fw-semibold text-primary mb-0">
+                        <h3 class="fw-semibold  mb-0">
                             @Model.TotalUsers
                         </h3>
                     </div>
@@ -58,7 +55,7 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <p class="text-muted small mb-1">Active Protocols</p>
-                        <h3 class="fw-semibold text-success mb-0">—</h3>
+                        <h3 class="fw-semibold  mb-0">@Model.ActiveProtocols</h3>
                     </div>
                 </div>
             </div>
@@ -66,7 +63,7 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <p class="text-muted small mb-1">Pending Samples</p>
-                        <h3 class="fw-semibold text-warning mb-0">—</h3>
+                        <h3 class="fw-semibold  mb-0">@Model.PendingSamples</h3>
                     </div>
                 </div>
             </div>
@@ -74,7 +71,7 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <p class="text-muted small mb-1">Enrolled Patients</p>
-                        <h3 class="fw-semibold text-info mb-0">—</h3>
+                        <h3 class="fw-semibold  mb-0">@Model.EnrolledPatients</h3>
                     </div>
                 </div>
             </div>

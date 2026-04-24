@@ -16,9 +16,8 @@ namespace LifeSci360.Identity.API.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Visit> Visits { get; set; }
-
-        // ✅ Add Protocol DbSet
         public DbSet<Protocol> Protocols { get; set; }
+        public DbSet<Sample> Samples { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
