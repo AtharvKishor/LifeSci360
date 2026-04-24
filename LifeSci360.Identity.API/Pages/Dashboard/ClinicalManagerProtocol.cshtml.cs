@@ -9,11 +9,11 @@ using System.Security.Claims;
 namespace LifeSci360.Identity.API.Pages.Dashboard
 {
     [Authorize(Roles = "Admin,ClinicalTrialManager")]
-    public class ClinicalManagerModel : PageModel
+    public class ClinicalManagerModels : PageModel
     {
         private readonly AppIdentityDbContext _context;
 
-        public ClinicalManagerModel(AppIdentityDbContext context)
+        public ClinicalManagerModels(AppIdentityDbContext context)
         {
             _context = context;
         }

@@ -22,7 +22,7 @@ namespace LifeSci360.Identity.API.Services
                 .Select(p => new PatientDto
                 {
                     PatientID = p.PatientID,
-                    ProtocolID = p.ProtocolID,
+                    ProtocolID = p.ProtocolId,
                     FullName = p.FullName,
                     DateOfBirth = p.DateOfBirth,
                     ContactInfo = p.ContactInfo,
@@ -40,7 +40,7 @@ namespace LifeSci360.Identity.API.Services
             return new PatientDto
             {
                 PatientID = p.PatientID,
-                ProtocolID = p.ProtocolID,
+                ProtocolID = p.ProtocolId,
                 FullName = p.FullName,
                 DateOfBirth = p.DateOfBirth,
                 ContactInfo = p.ContactInfo,
@@ -85,7 +85,7 @@ namespace LifeSci360.Identity.API.Services
             var patient = new Patient
             {
                 PatientID = Guid.NewGuid(),
-                ProtocolID = dto.ProtocolID,
+                ProtocolId = dto.ProtocolID,
                 FullName = dto.FullName,
                 DateOfBirth = dto.DateOfBirth,
                 ContactInfo = dto.ContactInfo,
@@ -117,8 +117,8 @@ namespace LifeSci360.Identity.API.Services
                 {
                     VisitID = Guid.NewGuid(),
                     PatientID = patient.PatientID,
-                    ProtocolID = patient.ProtocolID,
-                    ScheduledDate = patient.EnrolledDate.AddDays(offsets[i]),
+                    ProtocolID = patient.ProtocolId,
+                    VisitDate = patient.EnrolledDate.AddDays(offsets[i]),
                     Status = "Scheduled",
                     Notes = names[i]
                 });
@@ -131,13 +131,13 @@ namespace LifeSci360.Identity.API.Services
         {
             return await _context.Visits
                 .Where(v => v.PatientID == patientId)
-                .OrderBy(v => v.ScheduledDate)
+                .OrderBy(v => v.VisitDate)
                 .Select(v => new VisitDto
                 {
                     VisitID = v.VisitID,
                     PatientID = v.PatientID,
                     ProtocolID = v.ProtocolID,
-                    ScheduledDate = v.ScheduledDate,
+                    ScheduledDate = v.VisitDate,
                     Status = v.Status,
                     Notes = v.Notes
                 })
@@ -149,9 +149,9 @@ namespace LifeSci360.Identity.API.Services
             var visit = await _context.Visits.FindAsync(visitId);
             if (visit == null) return;
 
-            if (visit.ScheduledDate.Date == newDate.Date) return;
+            if (visit.VisitDate.Date == newDate.Date) return;
 
-            visit.ScheduledDate = newDate;
+            visit.VisitDate = newDate;
             visit.Status = "Rescheduled";
             await _context.SaveChangesAsync();
         }
@@ -172,7 +172,7 @@ namespace LifeSci360.Identity.API.Services
                 VisitID = Guid.NewGuid(),
                 PatientID = dto.PatientID,
                 ProtocolID = dto.ProtocolID,
-                ScheduledDate = dto.ScheduledDate,
+                VisitDate = dto.ScheduledDate,
                 Status = "Scheduled",
                 Notes = dto.Notes
             });

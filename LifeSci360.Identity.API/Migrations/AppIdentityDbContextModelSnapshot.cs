@@ -83,15 +83,113 @@ namespace LifeSci360.Identity.API.Migrations
                     b.ToTable("AuditLogs", (string)null);
                 });
 
+            modelBuilder.Entity("LifeSci360.Identity.API.Models.ComplianceReport", b =>
+                {
+                    b.Property<Guid>("ReportID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<string>("GeneratedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("GeneratedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("ReportID");
+
+                    b.ToTable("ComplianceReports", (string)null);
+                });
+
+            modelBuilder.Entity("LifeSci360.Identity.API.Models.LabResult", b =>
+                {
+                    b.Property<int>("ResultID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResultID"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ResultValue")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("SampleID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TestType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("ResultID");
+
+                    b.ToTable("LabResults", (string)null);
+                });
+
+            modelBuilder.Entity("LifeSci360.Identity.API.Models.Notification", b =>
+                {
+                    b.Property<Guid>("NotificationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("RecipientEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("SentDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("NotificationID");
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
             modelBuilder.Entity("LifeSci360.Identity.API.Models.Patient", b =>
                 {
                     b.Property<Guid>("PatientID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
 
                     b.Property<string>("ContactInfo")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
@@ -101,10 +199,10 @@ namespace LifeSci360.Identity.API.Migrations
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid>("ProtocolID")
+                    b.Property<Guid>("ProtocolId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
@@ -121,7 +219,19 @@ namespace LifeSci360.Identity.API.Migrations
                 {
                     b.Property<Guid>("ProtocolID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<string>("CreatedByUserID")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
@@ -141,8 +251,8 @@ namespace LifeSci360.Identity.API.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("ProtocolID");
 
@@ -153,7 +263,8 @@ namespace LifeSci360.Identity.API.Migrations
                 {
                     b.Property<Guid>("SampleID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
 
                     b.Property<DateTime>("CollectedDate")
                         .HasColumnType("datetime2");
@@ -166,11 +277,50 @@ namespace LifeSci360.Identity.API.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("SampleID");
 
-                    b.ToTable("Samples");
+                    b.ToTable("Samples", (string)null);
+                });
+
+            modelBuilder.Entity("LifeSci360.Identity.API.Models.Site", b =>
+                {
+                    b.Property<Guid>("SiteID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<Guid?>("InvestigatorID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("ProtocolID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SampleID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("SiteID");
+
+                    b.HasIndex("ProtocolID");
+
+                    b.ToTable("Sites", (string)null);
                 });
 
             modelBuilder.Entity("LifeSci360.Identity.API.Models.User", b =>
@@ -252,11 +402,12 @@ namespace LifeSci360.Identity.API.Migrations
                 {
                     b.Property<Guid>("VisitID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
 
                     b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<Guid>("PatientID")
                         .HasColumnType("uniqueidentifier");
@@ -264,13 +415,13 @@ namespace LifeSci360.Identity.API.Migrations
                     b.Property<Guid>("ProtocolID")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("ScheduledDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("VisitDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("VisitID");
 
@@ -383,6 +534,17 @@ namespace LifeSci360.Identity.API.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("LifeSci360.Identity.API.Models.Site", b =>
+                {
+                    b.HasOne("LifeSci360.Identity.API.Models.Protocol", "Protocol")
+                        .WithMany("Sites")
+                        .HasForeignKey("ProtocolID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Protocol");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("LifeSci360.Identity.API.Models.ApplicationRole", null)
@@ -432,6 +594,11 @@ namespace LifeSci360.Identity.API.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("LifeSci360.Identity.API.Models.Protocol", b =>
+                {
+                    b.Navigation("Sites");
                 });
 #pragma warning restore 612, 618
         }

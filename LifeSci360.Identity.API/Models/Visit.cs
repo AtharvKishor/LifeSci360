@@ -5,7 +5,7 @@ namespace LifeSci360.Identity.API.Models
     public class Visit
     {
         [Key]
-        public int VisitID { get; set; }
+        public Guid VisitID { get; set; }
 
         public Guid PatientID { get; set; }
 
