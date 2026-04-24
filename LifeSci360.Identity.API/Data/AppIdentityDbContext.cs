@@ -42,6 +42,64 @@ namespace LifeSci360.Identity.API.Data
                 entity.Property(a => a.Timestamp).IsRequired();
             });
 
+            // ── Protocol ───────────────────────────────────────
+            builder.Entity<Protocol>(entity =>
+            {
+                entity.HasKey(p => p.ProtocolID);
+                entity.ToTable("Protocols");
+                entity.Property(p => p.ProtocolID)
+                      .HasDefaultValueSql("NEWSEQUENTIALID()");
+                entity.Property(p => p.Title)
+                      .IsRequired()
+                      .HasMaxLength(200);
+                entity.Property(p => p.Phase)
+                      .IsRequired()
+                      .HasMaxLength(50);
+                entity.Property(p => p.StartDate)
+                      .IsRequired();
+                entity.Property(p => p.EndDate)
+                      .IsRequired();
+                entity.Property(p => p.Status)
+                      .IsRequired()
+                      .HasMaxLength(50);
+                entity.Property(p => p.Description)
+                      .HasMaxLength(1000);
+                entity.Property(p => p.CreatedDate)
+                      .IsRequired();
+                entity.Property(p => p.CreatedByUserID)
+                      .HasMaxLength(450);
+
+                // PhasesJson — stores phases as JSON string
+              
+            });
+
+            // ── Site ───────────────────────────────────────────
+            builder.Entity<Site>(entity =>
+            {
+                entity.HasKey(s => s.SiteID);
+                entity.ToTable("Sites");
+                entity.Property(s => s.SiteID)
+                      .HasDefaultValueSql("NEWSEQUENTIALID()");
+                entity.Property(s => s.Name)
+                      .IsRequired()
+                      .HasMaxLength(200);
+                entity.Property(s => s.Location)
+                      .IsRequired()
+                      .HasMaxLength(300);
+                entity.Property(s => s.Status)
+                      .IsRequired()
+                      .HasMaxLength(50);
+                entity.Property(s => s.InvestigatorID);
+                entity.Property(s => s.SampleID);
+
+                // Site → Protocol
+                entity.HasOne(s => s.Protocol)
+                      .WithMany(p => p.Sites)
+                      .HasForeignKey(s => s.ProtocolID)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ── Patient ────────────────────────────────────────
             builder.Entity<Patient>(entity =>
             {
                 entity.HasKey(p => p.PatientID);
@@ -51,6 +109,17 @@ namespace LifeSci360.Identity.API.Data
                 entity.Property(p => p.ContactInfo).HasMaxLength(255);
                 entity.Property(p => p.Status).IsRequired().HasMaxLength(50);
                 entity.Property(p => p.EnrolledDate).IsRequired();
+                entity.Property(p => p.PatientID)
+                      .HasDefaultValueSql("NEWSEQUENTIALID()");
+                entity.Property(p => p.FullName)
+                      .IsRequired()
+                      .HasMaxLength(200);
+                entity.Property(p => p.ContactInfo)
+                      .HasMaxLength(500);
+                entity.Property(p => p.ProtocolId);
+                entity.Property(p => p.Status)
+                      .IsRequired()
+                      .HasMaxLength(50);
             });
 
             builder.Entity<Visit>(entity =>
@@ -74,7 +143,10 @@ namespace LifeSci360.Identity.API.Data
                 entity.Property(p => p.ProtocolID)
                       .ValueGeneratedOnAdd();
 
-                entity.Property(p => p.Title)
+                entity.ToTable("Samples");
+                entity.Property(s => s.SampleID)
+                      .HasDefaultValueSql("NEWSEQUENTIALID()");
+                entity.Property(s => s.Status)
                       .IsRequired()
                       .HasMaxLength(255);
 
