@@ -21,7 +21,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         //Page Data 
         public List<Protocol> Protocols { get; set; } = new();
         public List<User> Investigators { get; set; } = new();
-        public List<string> AssignedInvestigatorIDs { get; set; } = new();
+        public List<string> AssignedInvestigatorIDs { get; set; } = new(); // string to match User.Id for UI comparisons
         public int TotalSites { get; set; }
         public int ActiveCount { get; set; }
         public int InactiveCount { get; set; }
@@ -40,7 +40,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         [BindProperty] public string? Description { get; set; }
 
         //Edit Protocol
-        [BindProperty] public int EditProtocolID { get; set; }
+        [BindProperty] public Guid EditProtocolID { get; set; }
         [BindProperty] public string EditTitle { get; set; } = null!;
         [BindProperty] public string EditPhase { get; set; } = null!;
         [BindProperty] public DateTime EditStartDate { get; set; }
@@ -50,16 +50,16 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         // Add Site
         [BindProperty] public string SiteName { get; set; } = null!;
         [BindProperty] public string SiteLocation { get; set; } = null!;
-        [BindProperty] public string? SiteInvestigatorID { get; set; }
-        [BindProperty] public int SiteProtocolID { get; set; }
+        [BindProperty] public Guid? SiteInvestigatorID { get; set; }
+        [BindProperty] public Guid SiteProtocolID { get; set; }
 
         //Edit Site
-        [BindProperty] public int EditSiteID { get; set; }
+        [BindProperty] public Guid EditSiteID { get; set; }
         [BindProperty] public string EditSiteName { get; set; } = null!;
         [BindProperty] public string EditSiteLocation { get; set; } = null!;
         [BindProperty] public string EditSiteStatus { get; set; } = null!;
-        [BindProperty] public string? EditSiteInvestigatorID { get; set; }
-        [BindProperty] public int EditSiteProtocolID { get; set; }
+        [BindProperty] public Guid? EditSiteInvestigatorID { get; set; }
+        [BindProperty] public Guid EditSiteProtocolID { get; set; }
 
         //GET
         public async Task OnGetAsync()
@@ -247,7 +247,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
                 return Page();
             }
 
-            if (!string.IsNullOrEmpty(SiteInvestigatorID))
+            if (SiteInvestigatorID.HasValue)
             {
                 var alreadyAssigned = await _context.Sites
                     .AnyAsync(s => s.InvestigatorID == SiteInvestigatorID);
@@ -268,8 +268,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
                 Location = SiteLocation,
                 Status = protocol.Status == "Completed"
                                  ? "Closed" : "Active",
-                InvestigatorID = string.IsNullOrEmpty(SiteInvestigatorID)
-                                 ? null : SiteInvestigatorID,
+                InvestigatorID = SiteInvestigatorID,
                 ProtocolID = SiteProtocolID
             };
 
@@ -311,7 +310,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
                 return Page();
             }
 
-            if (!string.IsNullOrEmpty(EditSiteInvestigatorID))
+            if (EditSiteInvestigatorID.HasValue)
             {
                 var alreadyAssigned = await _context.Sites
                     .AnyAsync(s =>
@@ -331,9 +330,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
             site.Name = EditSiteName;
             site.Location = EditSiteLocation;
             site.Status = EditSiteStatus;
-            site.InvestigatorID =
-                string.IsNullOrEmpty(EditSiteInvestigatorID)
-                ? null : EditSiteInvestigatorID;
+            site.InvestigatorID = EditSiteInvestigatorID;
 
             _context.AuditLogs.Add(new AuditLog
             {
@@ -350,7 +347,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
 
         //POST: Delete Site
         public async Task<IActionResult> OnPostDeleteSiteAsync(
-            int siteId)
+            Guid siteId)
         {
             var site = await _context.Sites
                 .FirstOrDefaultAsync(s => s.SiteID == siteId);
@@ -374,7 +371,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
 
         //POST: Delete Protocol
         public async Task<IActionResult> OnPostDeleteProtocolAsync(
-            int protocolId)
+            Guid protocolId)
         {
             var protocol = await _context.Protocols
                 .Include(p => p.Sites)
@@ -403,7 +400,6 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         {
             Protocols = await _context.Protocols
                 .Include(p => p.Sites)
-                    .ThenInclude(s => s.Investigator)
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
 
@@ -414,7 +410,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
 
             AssignedInvestigatorIDs = await _context.Sites
                 .Where(s => s.InvestigatorID != null)
-                .Select(s => s.InvestigatorID!)
+                .Select(s => s.InvestigatorID!.Value.ToString())
                 .ToListAsync();
 
             TotalSites = Protocols.Sum(p => p.Sites.Count);
@@ -443,5 +439,10 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         public string GetInitial(string name) =>
             string.IsNullOrEmpty(name) ? "?"
             : name.Substring(0, 1).ToUpper();
+
+        public string GetInvestigatorName(Guid? id) =>
+            id == null ? "Not assigned"
+            : Investigators.FirstOrDefault(u => u.Id == id.Value.ToString())?.FullName
+              ?? "Unknown";
     }
 }

@@ -7,7 +7,7 @@ namespace LifeSci360.Identity.API.Models
         [Key]
         public int ResultID { get; set; }
 
-        public int SampleID { get; set; }
+        public Guid SampleID { get; set; }
 
         [Required, MaxLength(100)]
         public string TestType { get; set; } = null!;

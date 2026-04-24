@@ -67,7 +67,7 @@ namespace LifeSci360.Identity.API.Data
                 entity.HasKey(p => p.ProtocolID);
                 entity.ToTable("Protocols");
                 entity.Property(p => p.ProtocolID)
-                      .ValueGeneratedOnAdd();
+                      .HasDefaultValueSql("NEWSEQUENTIALID()");
                 entity.Property(p => p.Title)
                       .IsRequired()
                       .HasMaxLength(200);
@@ -98,7 +98,7 @@ namespace LifeSci360.Identity.API.Data
                 entity.HasKey(s => s.SiteID);
                 entity.ToTable("Sites");
                 entity.Property(s => s.SiteID)
-                      .ValueGeneratedOnAdd();
+                      .HasDefaultValueSql("NEWSEQUENTIALID()");
                 entity.Property(s => s.Name)
                       .IsRequired()
                       .HasMaxLength(200);
@@ -108,21 +108,14 @@ namespace LifeSci360.Identity.API.Data
                 entity.Property(s => s.Status)
                       .IsRequired()
                       .HasMaxLength(50);
-                entity.Property(s => s.InvestigatorID)
-                      .HasMaxLength(450);
+                entity.Property(s => s.InvestigatorID);
+                entity.Property(s => s.SampleID);
 
                 // Site → Protocol
                 entity.HasOne(s => s.Protocol)
                       .WithMany(p => p.Sites)
                       .HasForeignKey(s => s.ProtocolID)
                       .OnDelete(DeleteBehavior.Cascade);
-
-                // Site → User (Investigator)
-                entity.HasOne(s => s.Investigator)
-                      .WithMany()
-                      .HasForeignKey(s => s.InvestigatorID)
-                      .OnDelete(DeleteBehavior.SetNull)
-                      .IsRequired(false);
             });
 
             // ── Patient ────────────────────────────────────────
@@ -137,7 +130,8 @@ namespace LifeSci360.Identity.API.Data
                       .HasMaxLength(200);
                 entity.Property(p => p.ContactInfo)
                       .HasMaxLength(500);
-                entity.Property(p => p.EnrollmentStatus)
+                entity.Property(p => p.ProtocolId);
+                entity.Property(p => p.Status)
                       .IsRequired()
                       .HasMaxLength(50);
             });
@@ -174,7 +168,7 @@ namespace LifeSci360.Identity.API.Data
                 entity.HasKey(s => s.SampleID);
                 entity.ToTable("Samples");
                 entity.Property(s => s.SampleID)
-                      .ValueGeneratedOnAdd();
+                      .HasDefaultValueSql("NEWSEQUENTIALID()");
                 entity.Property(s => s.Status)
                       .IsRequired()
                       .HasMaxLength(50);

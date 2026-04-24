@@ -124,8 +124,8 @@ namespace LifeSci360.Identity.API.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("SampleID")
-                        .HasColumnType("int");
+                    b.Property<Guid>("SampleID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -198,15 +198,18 @@ namespace LifeSci360.Identity.API.Migrations
                     b.Property<DateTime>("EnrolledDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("EnrollmentStatus")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("ProtocolId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("PatientID");
 
@@ -215,11 +218,10 @@ namespace LifeSci360.Identity.API.Migrations
 
             modelBuilder.Entity("LifeSci360.Identity.API.Models.Protocol", b =>
                 {
-                    b.Property<int>("ProtocolID")
+                    b.Property<Guid>("ProtocolID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProtocolID"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
 
                     b.Property<string>("CreatedByUserID")
                         .HasMaxLength(450)
@@ -260,11 +262,10 @@ namespace LifeSci360.Identity.API.Migrations
 
             modelBuilder.Entity("LifeSci360.Identity.API.Models.Sample", b =>
                 {
-                    b.Property<int>("SampleID")
+                    b.Property<Guid>("SampleID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SampleID"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
 
                     b.Property<DateTime>("CollectedDate")
                         .HasColumnType("datetime2");
@@ -272,8 +273,8 @@ namespace LifeSci360.Identity.API.Migrations
                     b.Property<Guid>("PatientID")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("ProtocolID")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ProtocolID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -291,15 +292,13 @@ namespace LifeSci360.Identity.API.Migrations
 
             modelBuilder.Entity("LifeSci360.Identity.API.Models.Site", b =>
                 {
-                    b.Property<int>("SiteID")
+                    b.Property<Guid>("SiteID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SiteID"));
-
-                    b.Property<string>("InvestigatorID")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid?>("InvestigatorID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -311,8 +310,11 @@ namespace LifeSci360.Identity.API.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<int>("ProtocolID")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ProtocolID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SampleID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -320,8 +322,6 @@ namespace LifeSci360.Identity.API.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("SiteID");
-
-                    b.HasIndex("InvestigatorID");
 
                     b.HasIndex("ProtocolID");
 
@@ -418,8 +418,8 @@ namespace LifeSci360.Identity.API.Migrations
                     b.Property<Guid>("PatientID")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("ProtocolID")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ProtocolID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -578,18 +578,11 @@ namespace LifeSci360.Identity.API.Migrations
 
             modelBuilder.Entity("LifeSci360.Identity.API.Models.Site", b =>
                 {
-                    b.HasOne("LifeSci360.Identity.API.Models.User", "Investigator")
-                        .WithMany()
-                        .HasForeignKey("InvestigatorID")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("LifeSci360.Identity.API.Models.Protocol", "Protocol")
                         .WithMany("Sites")
                         .HasForeignKey("ProtocolID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Investigator");
 
                     b.Navigation("Protocol");
                 });

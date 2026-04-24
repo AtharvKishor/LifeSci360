@@ -5,7 +5,7 @@ namespace LifeSci360.Identity.API.Models
     public class Protocol
     {
         [Key]
-        public int ProtocolID { get; set; }
+        public Guid ProtocolID { get; set; }
 
         [Required, MaxLength(200)]
         public string Title { get; set; } = null!;

@@ -1,11 +1,11 @@
-﻿namespace LifeSci360.Shared.DTOs
+namespace LifeSci360.Shared.DTOs
 {
     public class CreateSiteRequest
     {
         public string Name { get; set; } = null!;
         public string Location { get; set; } = null!;
-        public string? InvestigatorID { get; set; }
-        public int ProtocolID { get; set; }
+        public Guid? InvestigatorID { get; set; }
+        public Guid ProtocolID { get; set; }
         public string Status { get; set; } = "Active";
     }
 
@@ -13,18 +13,18 @@
     {
         public string Name { get; set; } = null!;
         public string Location { get; set; } = null!;
-        public string? InvestigatorID { get; set; }
+        public Guid? InvestigatorID { get; set; }
         public string Status { get; set; } = null!;
     }
 
     public class SiteDto
     {
-        public int SiteID { get; set; }
+        public Guid SiteID { get; set; }
         public string Name { get; set; } = null!;
         public string Location { get; set; } = null!;
-        public string? InvestigatorID { get; set; }
+        public Guid? InvestigatorID { get; set; }
         public string Status { get; set; } = null!;
-        public int ProtocolID { get; set; }
+        public Guid ProtocolID { get; set; }
     }
     public class InvestigatorDto
     {

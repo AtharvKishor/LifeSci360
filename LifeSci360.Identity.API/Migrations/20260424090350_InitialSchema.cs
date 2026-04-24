@@ -50,7 +50,8 @@ namespace LifeSci360.Identity.API.Migrations
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ContactInfo = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     EnrolledDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EnrollmentStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                    ProtocolId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -61,8 +62,7 @@ namespace LifeSci360.Identity.API.Migrations
                 name: "Protocols",
                 columns: table => new
                 {
-                    ProtocolID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProtocolID = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Phase = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -126,9 +126,8 @@ namespace LifeSci360.Identity.API.Migrations
                 name: "Samples",
                 columns: table => new
                 {
-                    SampleID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ProtocolID = table.Column<int>(type: "int", nullable: false),
+                    SampleID = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
+                    ProtocolID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PatientID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CollectedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
@@ -151,13 +150,36 @@ namespace LifeSci360.Identity.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Sites",
+                columns: table => new
+                {
+                    SiteID = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Location = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    InvestigatorID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ProtocolID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SampleID = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Sites", x => x.SiteID);
+                    table.ForeignKey(
+                        name: "FK_Sites_Protocols_ProtocolID",
+                        column: x => x.ProtocolID,
+                        principalTable: "Protocols",
+                        principalColumn: "ProtocolID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Visits",
                 columns: table => new
                 {
                     VisitID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PatientID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProtocolID = table.Column<int>(type: "int", nullable: false),
+                    ProtocolID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     VisitDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true)
@@ -221,35 +243,6 @@ namespace LifeSci360.Identity.API.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Sites",
-                columns: table => new
-                {
-                    SiteID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Location = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
-                    InvestigatorID = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ProtocolID = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Sites", x => x.SiteID);
-                    table.ForeignKey(
-                        name: "FK_Sites_Protocols_ProtocolID",
-                        column: x => x.ProtocolID,
-                        principalTable: "Protocols",
-                        principalColumn: "ProtocolID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Sites_Users_InvestigatorID",
-                        column: x => x.InvestigatorID,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -343,7 +336,7 @@ namespace LifeSci360.Identity.API.Migrations
                 {
                     ResultID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    SampleID = table.Column<int>(type: "int", nullable: false),
+                    SampleID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TestType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     ResultValue = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -391,11 +384,6 @@ namespace LifeSci360.Identity.API.Migrations
                 name: "IX_Samples_ProtocolID",
                 table: "Samples",
                 column: "ProtocolID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Sites_InvestigatorID",
-                table: "Sites",
-                column: "InvestigatorID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sites_ProtocolID",

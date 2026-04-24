@@ -16,8 +16,9 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
             _context = context;
         }
 
-        //  Page Data 
+        //  Page Data
         public List<Protocol> Protocols { get; set; } = new();
+        public List<User> Investigators { get; set; } = new();
         public int TotalSites { get; set; }
         public int ActiveCount { get; set; }
         public int InactiveCount { get; set; }
@@ -28,8 +29,11 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         {
             Protocols = await _context.Protocols
                 .Include(p => p.Sites)
-                    .ThenInclude(s => s.Investigator)
                 .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            Investigators = await _context.Users
+                .Where(u => u.IsActive)
                 .ToListAsync();
 
             TotalSites = Protocols.Sum(p => p.Sites.Count);
@@ -58,5 +62,10 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         public string GetInitial(string name) =>
             string.IsNullOrEmpty(name) ? "?"
             : name.Substring(0, 1).ToUpper();
+
+        public string GetInvestigatorName(Guid? id) =>
+            id == null ? "Not assigned"
+            : Investigators.FirstOrDefault(u => u.Id == id.Value.ToString())?.FullName
+              ?? "Unknown";
     }
 }

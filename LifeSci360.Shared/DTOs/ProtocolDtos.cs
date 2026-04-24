@@ -22,7 +22,7 @@
 
     public class ProtocolDto
     {
-        public int ProtocolID { get; set; }
+        public Guid ProtocolID { get; set; }
         public string Title { get; set; } = null!;
         public string Phase { get; set; } = null!;
         public DateTime StartDate { get; set; }

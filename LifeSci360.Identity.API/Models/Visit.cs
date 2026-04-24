@@ -9,7 +9,7 @@ namespace LifeSci360.Identity.API.Models
 
         public Guid PatientID { get; set; }
 
-        public int ProtocolID { get; set; }    
+        public Guid ProtocolID { get; set; }    
 
         public DateTime VisitDate { get; set; }
 

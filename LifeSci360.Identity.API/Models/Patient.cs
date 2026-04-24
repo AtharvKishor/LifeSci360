@@ -17,7 +17,9 @@ namespace LifeSci360.Identity.API.Models
 
         public DateTime EnrolledDate { get; set; }
 
+        public Guid? ProtocolId { get; set; }
+
         [Required, MaxLength(50)]
-        public string EnrollmentStatus { get; set; } = "Pending";
+        public string Status { get; set; } = "Pending";
     }
 }

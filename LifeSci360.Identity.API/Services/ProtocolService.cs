@@ -27,7 +27,7 @@ namespace LifeSci360.Identity.API.Services
         }
 
         // ── GET BY ID ───────────────────────────────────────────
-        public async Task<ProtocolDto?> GetProtocolByIdAsync(int id)
+        public async Task<ProtocolDto?> GetProtocolByIdAsync(Guid id)
         {
             var protocol = await _context.Protocols
                 .Include(p => p.Sites)
@@ -73,7 +73,7 @@ namespace LifeSci360.Identity.API.Services
 
         // ── UPDATE ──────────────────────────────────────────────
         public async Task<bool> UpdateProtocolAsync(
-            int id, UpdateProtocolRequest request)
+            Guid id, UpdateProtocolRequest request)
         {
             var protocol = await _context.Protocols.FindAsync(id);
             if (protocol == null) return false;
@@ -97,7 +97,7 @@ namespace LifeSci360.Identity.API.Services
         }
 
         // ── DELETE ───────
-        public async Task<bool> DeleteProtocolAsync(int id)
+        public async Task<bool> DeleteProtocolAsync(Guid id)
         {
             var protocol = await _context.Protocols
                 .Include(p => p.Sites)
@@ -122,7 +122,7 @@ namespace LifeSci360.Identity.API.Services
 
         // ── ADD SITE ────────────────────────────────────────────
         public async Task<bool> AddSiteAsync(
-            int protocolId, CreateSiteRequest request)
+            Guid protocolId, CreateSiteRequest request)
         {
             var protocol = await _context.Protocols.FindAsync(protocolId);
             if (protocol == null) return false;
@@ -132,8 +132,7 @@ namespace LifeSci360.Identity.API.Services
                 Name = request.Name,
                 Location = request.Location,
                 Status = request.Status,
-                InvestigatorID = string.IsNullOrEmpty(request.InvestigatorID)
-                                 ? null : request.InvestigatorID,
+                InvestigatorID = request.InvestigatorID,
                 ProtocolID = protocolId
             };
 
@@ -153,7 +152,7 @@ namespace LifeSci360.Identity.API.Services
 
         // ── UPDATE SITE ─────────────────────────────────────────
         public async Task<bool> UpdateSiteAsync(
-            int siteId, UpdateSiteRequest request)
+            Guid siteId, UpdateSiteRequest request)
         {
             var site = await _context.Sites.FindAsync(siteId);
             if (site == null) return false;
@@ -161,8 +160,7 @@ namespace LifeSci360.Identity.API.Services
             site.Name = request.Name;
             site.Location = request.Location;
             site.Status = request.Status;
-            site.InvestigatorID = string.IsNullOrEmpty(request.InvestigatorID)
-                                  ? null : request.InvestigatorID;
+            site.InvestigatorID = request.InvestigatorID;
 
             _context.AuditLogs.Add(new AuditLog
             {

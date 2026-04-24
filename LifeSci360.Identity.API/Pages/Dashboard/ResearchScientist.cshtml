@@ -400,26 +400,13 @@
                                                 <div class="detail-key mb-1">
                                                     Investigator
                                                 </div>
-                                                @if (s.Investigator != null)
+                                                @if (s.InvestigatorID.HasValue)
                                                 {
-                                                    <div class="d-flex
-                                                         align-items-center
-                                                         gap-2">
-                                                        <div class="inv-avatar">
-                                                            @Model.GetInitial(
-                                                                s.Investigator.FullName)
-                                                        </div>
-                                                        <div>
-                                                            <div class="fw-semibold"
-                                                                 style="font-size:12px">
-                                                                @s.Investigator.FullName
-                                                            </div>
-                                                            <div class="text-muted"
-                                                                 style="font-size:11px">
-                                                                @s.Investigator.Email
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                    <span style="font-size:12px;
+                                                          font-weight:600">
+                                                        @Model.GetInvestigatorName(
+                                                            s.InvestigatorID)
+                                                    </span>
                                                 }
                                                 else
                                                 {

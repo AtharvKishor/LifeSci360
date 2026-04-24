@@ -5,9 +5,9 @@ namespace LifeSci360.Identity.API.Models
     public class Sample
     {
         [Key]
-        public int SampleID { get; set; }
+        public Guid SampleID { get; set; }
 
-        public int ProtocolID { get; set; }
+        public Guid ProtocolID { get; set; }
 
         public Guid PatientID { get; set; }
 
