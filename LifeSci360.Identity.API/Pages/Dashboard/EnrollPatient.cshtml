@@ -51,11 +51,11 @@
             <a asp-page="/Dashboard/ClinicalManager"
                class="btn btn-outline-secondary btn-sm">
                 ← Back
-            </a>
-            <form method="post" asp-page="/Account/Logout">
-                @Html.AntiForgeryToken()
-                <button class="btn btn-outline-danger btn-sm">Logout</button>
-            </form>
+                </a>
+                <form method="post" asp-page="/Account/Logout">
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-outline-danger btn-sm">Logout</button>
+                </form>
         </div>
     </nav>
 

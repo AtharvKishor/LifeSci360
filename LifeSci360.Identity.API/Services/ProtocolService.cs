@@ -15,7 +15,7 @@ namespace LifeSci360.Identity.API.Services
             _context = context;
         }
 
-        // ── GET ALL ─────────────────────────────────────────────
+        //    GET ALL                
         public async Task<List<ProtocolDto>> GetAllProtocolsAsync()
         {
             var protocols = await _context.Protocols
@@ -26,7 +26,7 @@ namespace LifeSci360.Identity.API.Services
             return protocols.Select(p => MapToDto(p)).ToList();
         }
 
-        // ── GET BY ID ───────────────────────────────────────────
+        //    GET BY ID 
         public async Task<ProtocolDto?> GetProtocolByIdAsync(Guid id)
         {
             var protocol = await _context.Protocols
@@ -36,7 +36,7 @@ namespace LifeSci360.Identity.API.Services
             return protocol == null ? null : MapToDto(protocol);
         }
 
-        // ── CREATE ──────────────────────────────────────────────
+        //    CREATE  
         public async Task<ProtocolDto> CreateProtocolAsync(
             CreateProtocolRequest request, string userId)
         {
@@ -51,27 +51,22 @@ namespace LifeSci360.Identity.API.Services
                 CreatedDate = DateTime.UtcNow,
                 CreatedByUserID = userId
             };
-
             _context.Protocols.Add(protocol);
-
             _context.AuditLogs.Add(new AuditLog
             {
                 UserID = userId,
                 Action = $"Created Protocol: {protocol.Title}",
                 Timestamp = DateTime.UtcNow
             });
-
             await _context.SaveChangesAsync();
 
             // Reload with sites navigation
             await _context.Entry(protocol)
                 .Collection(p => p.Sites)
                 .LoadAsync();
-
             return MapToDto(protocol);
         }
-
-        // ── UPDATE ──────────────────────────────────────────────
+        //    UPDATE  
         public async Task<bool> UpdateProtocolAsync(
             Guid id, UpdateProtocolRequest request)
         {
@@ -96,7 +91,7 @@ namespace LifeSci360.Identity.API.Services
             return true;
         }
 
-        // ── DELETE ───────
+        //    DELETE    
         public async Task<bool> DeleteProtocolAsync(Guid id)
         {
             var protocol = await _context.Protocols
@@ -120,7 +115,7 @@ namespace LifeSci360.Identity.API.Services
             return true;
         }
 
-        // ── ADD SITE ────────────────────────────────────────────
+        //ADD SITE                 
         public async Task<bool> AddSiteAsync(
             Guid protocolId, CreateSiteRequest request)
         {
@@ -150,7 +145,7 @@ namespace LifeSci360.Identity.API.Services
             return true;
         }
 
-        // ── UPDATE SITE ─────────────────────────────────────────
+        //    UPDATE SITE                
         public async Task<bool> UpdateSiteAsync(
             Guid siteId, UpdateSiteRequest request)
         {
@@ -173,7 +168,7 @@ namespace LifeSci360.Identity.API.Services
             return true;
         }
 
-        // ── SEARCH ──────────────────────────────────────────────
+        //    SEARCH  
         public async Task<List<ProtocolDto>> SearchProtocolsAsync(
             string? title, string? phase, string? status)
         {
@@ -198,7 +193,7 @@ namespace LifeSci360.Identity.API.Services
             return results.Select(p => MapToDto(p)).ToList();
         }
 
-        // ── GET INVESTIGATORS ───────────────────────────────────
+        //    GET INVESTIGATORS              
         public async Task<List<InvestigatorDto>> GetInvestigatorsAsync()
         {
             return await _context.Users
@@ -213,7 +208,65 @@ namespace LifeSci360.Identity.API.Services
                 .ToListAsync();
         }
 
-        // ── PRIVATE MAPPER ──────────────────────────────────────
+        //    DELETE SITE                
+        public async Task<bool> DeleteSiteAsync(Guid siteId)
+        {
+            var site = await _context.Sites.FindAsync(siteId);
+            if (site == null) return false;
+
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserID = "system",
+                Action = $"Deleted Site '{site.Name}'",
+                Timestamp = DateTime.UtcNow
+            });
+            _context.Sites.Remove(site);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        //    AUTO UPDATE STATUSES             
+        public async Task AutoUpdateProtocolStatusesAsync()
+        {
+            var protocols = await _context.Protocols
+                .Include(p => p.Sites)
+                .ToListAsync();
+
+            var today = DateTime.UtcNow.Date;
+            bool changed = false;
+
+            foreach (var p in protocols)
+            {
+                string newStatus;
+                if (today < p.StartDate.Date)
+                    newStatus = "Inactive";
+                else if (today <= p.EndDate.Date)
+                    newStatus = "Active";
+                else
+                    newStatus = "Completed";
+
+                if (p.Status != newStatus)
+                {
+                    p.Status = newStatus;
+
+                    if (newStatus == "Completed")
+                        foreach (var s in p.Sites.Where(s => s.Status == "Active"))
+                            s.Status = "Closed";
+
+                    _context.AuditLogs.Add(new AuditLog
+                    {
+                        UserID = "system",
+                        Action = $"Auto-updated Protocol '{p.Title}' to {newStatus}",
+                        Timestamp = DateTime.UtcNow
+                    });
+                    changed = true;
+                }
+            }
+
+            if (changed) await _context.SaveChangesAsync();
+        }
+
+        //    PRIVATE MAPPER               
         private static ProtocolDto MapToDto(Protocol p)
         {
             return new ProtocolDto

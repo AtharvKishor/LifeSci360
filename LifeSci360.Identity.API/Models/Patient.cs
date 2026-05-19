@@ -12,7 +12,7 @@ namespace LifeSci360.Identity.API.Models
 
         public DateTime DateOfBirth { get; set; }
 
-        [MaxLength(500)]
+        [MaxLength(20)]
         public string? ContactInfo { get; set; }
 
         public DateTime EnrolledDate { get; set; }

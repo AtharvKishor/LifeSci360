@@ -1,9 +1,8 @@
-using LifeSci360.Identity.API.Data;
-using LifeSci360.Identity.API.Models;
+using LifeSci360.Shared.DTOs;
+using LifeSci360.Shared.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace LifeSci360.Identity.API.Pages.Dashboard
@@ -11,17 +10,17 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
     [Authorize(Roles = "Admin,ClinicalTrialManager")]
     public class ClinicalManagerModels : PageModel
     {
-        private readonly AppIdentityDbContext _context;
+        private readonly IProtocolService _protocolService;
 
-        public ClinicalManagerModels(AppIdentityDbContext context)
+        public ClinicalManagerModels(IProtocolService protocolService)
         {
-            _context = context;
+            _protocolService = protocolService;
         }
 
-        //Page Data 
-        public List<Protocol> Protocols { get; set; } = new();
-        public List<User> Investigators { get; set; } = new();
-        public List<string> AssignedInvestigatorIDs { get; set; } = new(); // string to match User.Id for UI comparisons
+        // Page Data
+        public List<ProtocolDto> Protocols { get; set; } = new();
+        public List<InvestigatorDto> Investigators { get; set; } = new();
+        public List<string> AssignedInvestigatorIDs { get; set; } = new();
         public int TotalSites { get; set; }
         public int ActiveCount { get; set; }
         public int InactiveCount { get; set; }
@@ -32,14 +31,14 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
             DateTime.UtcNow.ToString("yyyy-MM-dd");
         public string MaxDateString { get; set; } = "2035-12-31";
 
-        //Create Protocol
+        // Create Protocol
         [BindProperty] public string Title { get; set; } = null!;
         [BindProperty] public string Phase { get; set; } = null!;
         [BindProperty] public DateTime StartDate { get; set; }
         [BindProperty] public DateTime EndDate { get; set; }
         [BindProperty] public string? Description { get; set; }
 
-        //Edit Protocol
+        // Edit Protocol
         [BindProperty] public Guid EditProtocolID { get; set; }
         [BindProperty] public string EditTitle { get; set; } = null!;
         [BindProperty] public string EditPhase { get; set; } = null!;
@@ -53,7 +52,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         [BindProperty] public Guid? SiteInvestigatorID { get; set; }
         [BindProperty] public Guid SiteProtocolID { get; set; }
 
-        //Edit Site
+        // Edit Site
         [BindProperty] public Guid EditSiteID { get; set; }
         [BindProperty] public string EditSiteName { get; set; } = null!;
         [BindProperty] public string EditSiteLocation { get; set; } = null!;
@@ -61,62 +60,16 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         [BindProperty] public Guid? EditSiteInvestigatorID { get; set; }
         [BindProperty] public Guid EditSiteProtocolID { get; set; }
 
-        //GET
+        // GET
         public async Task OnGetAsync()
         {
-            await AutoUpdateStatusAsync();
+            await _protocolService.AutoUpdateProtocolStatusesAsync();
             await LoadDataAsync();
         }
 
-        //Auto update protocol status
-        private async Task AutoUpdateStatusAsync()
-        {
-            var protocols = await _context.Protocols
-                .Include(p => p.Sites)
-                .ToListAsync();
-
-            var today = DateTime.UtcNow.Date;
-            bool changed = false;
-
-            foreach (var p in protocols)
-            {
-                string newStatus;
-                if (today < p.StartDate.Date)
-                    newStatus = "Inactive";
-                else if (today <= p.EndDate.Date)
-                    newStatus = "Active";
-                else
-                    newStatus = "Completed";
-
-                if (p.Status != newStatus)
-                {
-                    p.Status = newStatus;
-
-                    if (newStatus == "Completed")
-                        foreach (var s in p.Sites
-                            .Where(s => s.Status == "Active"))
-                            s.Status = "Closed";
-
-                    _context.AuditLogs.Add(new AuditLog
-                    {
-                        UserID = "system",
-                        Action = $"Auto-updated Protocol " +
-                                    $"'{p.Title}' to {newStatus}",
-                        Timestamp = DateTime.UtcNow
-                    });
-                    changed = true;
-                }
-            }
-
-            if (changed)
-                await _context.SaveChangesAsync();
-        }
-
-        //POST: Create Protocol
+        // POST: Create Protocol
         public async Task<IActionResult> OnPostCreateProtocolAsync()
         {
-            var today = DateTime.UtcNow.Date;
-
             if (string.IsNullOrEmpty(Title))
             {
                 ErrorMessage = "Title is required.";
@@ -124,52 +77,34 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
                 return Page();
             }
 
-         
-
             if (EndDate.Date <= StartDate.Date)
             {
-                ErrorMessage =
-                    "End date must be after the start date.";
+                ErrorMessage = "End date must be after the start date.";
                 await LoadDataAsync();
                 return Page();
             }
 
-            string autoStatus = today < StartDate.Date
-                ? "Inactive" : "Active";
+            var today = DateTime.UtcNow.Date;
+            string autoStatus = today < StartDate.Date ? "Inactive" : "Active";
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
 
-            var userId = User.FindFirstValue(
-                             ClaimTypes.NameIdentifier) ?? "system";
-
-            var protocol = new Protocol
+            await _protocolService.CreateProtocolAsync(new CreateProtocolRequest
             {
                 Title = Title,
                 Phase = Phase,
-                Status = autoStatus,
                 StartDate = StartDate,
                 EndDate = EndDate,
-                Description = Description,
-                CreatedDate = DateTime.UtcNow,
-                CreatedByUserID = userId
-            };
+                Status = autoStatus,
+                Description = Description
+            }, userId);
 
-            _context.Protocols.Add(protocol);
-            _context.AuditLogs.Add(new AuditLog
-            {
-                UserID = userId,
-                Action = $"Created Protocol: {protocol.Title}",
-                Timestamp = DateTime.UtcNow
-            });
-
-            await _context.SaveChangesAsync();
             SuccessMessage = $"Protocol '{Title}' created.";
             return RedirectToPage();
         }
 
-        //POST: Edit Protocol
+        // POST: Edit Protocol
         public async Task<IActionResult> OnPostEditProtocolAsync()
         {
-            var today = DateTime.UtcNow.Date;
-
             if (string.IsNullOrEmpty(EditTitle))
             {
                 ErrorMessage = "Title is required.";
@@ -177,241 +112,162 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
                 return Page();
             }
 
-          
-
             if (EditEndDate.Date <= EditStartDate.Date)
             {
-                ErrorMessage =
-                    "End date must be after the start date.";
+                ErrorMessage = "End date must be after the start date.";
                 await LoadDataAsync();
                 return Page();
             }
 
-            var protocol = await _context.Protocols
-                .FirstOrDefaultAsync(
-                    p => p.ProtocolID == EditProtocolID);
+            var today = DateTime.UtcNow.Date;
+            string newStatus;
+            if (today < EditStartDate.Date) newStatus = "Inactive";
+            else if (today <= EditEndDate.Date) newStatus = "Active";
+            else newStatus = "Completed";
 
-            if (protocol == null)
+            var success = await _protocolService.UpdateProtocolAsync(
+                EditProtocolID,
+                new UpdateProtocolRequest
+                {
+                    Title = EditTitle,
+                    Phase = EditPhase,
+                    StartDate = EditStartDate,
+                    EndDate = EditEndDate,
+                    Status = newStatus,
+                    Description = EditDescription
+                });
+
+            if (!success)
             {
                 ErrorMessage = "Protocol not found.";
                 await LoadDataAsync();
                 return Page();
             }
 
-            protocol.Title = EditTitle;
-            protocol.Phase = EditPhase;
-            protocol.StartDate = EditStartDate;
-            protocol.EndDate = EditEndDate;
-            protocol.Description = EditDescription;
-
-            if (today < EditStartDate.Date)
-                protocol.Status = "Inactive";
-            else if (today <= EditEndDate.Date)
-                protocol.Status = "Active";
-            else
-                protocol.Status = "Completed";
-
-            _context.AuditLogs.Add(new AuditLog
-            {
-                UserID = User.FindFirstValue(
-                                ClaimTypes.NameIdentifier) ?? "system",
-                Action = $"Updated Protocol: '{EditTitle}'",
-                Timestamp = DateTime.UtcNow
-            });
-
-            await _context.SaveChangesAsync();
             SuccessMessage = $"Protocol '{EditTitle}' updated.";
             return RedirectToPage();
         }
 
-        // POST: Add Site 
-
-        // ── POST: Add Site ─────────────────────────────────────
+        // POST: Add Site
         public async Task<IActionResult> OnPostAddSiteAsync()
         {
-            var protocol = await _context.Protocols
-                .FindAsync(SiteProtocolID);
-
-            if (protocol == null)
-            {
-                ErrorMessage = "Protocol not found.";
-                await LoadDataAsync();
-                return Page();
-            }
-
-            if (string.IsNullOrEmpty(SiteName) ||
-                string.IsNullOrEmpty(SiteLocation))
+            if (string.IsNullOrEmpty(SiteName) || string.IsNullOrEmpty(SiteLocation))
             {
                 ErrorMessage = "Site name and location are required.";
                 await LoadDataAsync();
                 return Page();
             }
 
+            var protocol = await _protocolService.GetProtocolByIdAsync(SiteProtocolID);
+            if (protocol == null)
+            {
+                ErrorMessage = "Protocol not found.";
+                await LoadDataAsync();
+                return Page();
+            }
+
             if (SiteInvestigatorID.HasValue)
             {
-                var alreadyAssigned = await _context.Sites
-                    .AnyAsync(s => s.InvestigatorID == SiteInvestigatorID);
+                var allProtocols = await _protocolService.GetAllProtocolsAsync();
+                var alreadyAssigned = allProtocols
+                    .SelectMany(p => p.Sites)
+                    .Any(s => s.InvestigatorID == SiteInvestigatorID);
 
                 if (alreadyAssigned)
                 {
-                    ErrorMessage =
-                        "This investigator is already assigned " +
-                        "to another site.";
+                    ErrorMessage = "This investigator is already assigned to another site.";
                     await LoadDataAsync();
                     return Page();
                 }
             }
 
-            var site = new Site
+            await _protocolService.AddSiteAsync(SiteProtocolID, new CreateSiteRequest
             {
                 Name = SiteName,
                 Location = SiteLocation,
-                Status = protocol.Status == "Completed"
-                                 ? "Closed" : "Active",
+                Status = protocol.Status == "Completed" ? "Closed" : "Active",
                 InvestigatorID = SiteInvestigatorID,
                 ProtocolID = SiteProtocolID
-            };
-
-            _context.Sites.Add(site);
-            _context.AuditLogs.Add(new AuditLog
-            {
-                UserID = User.FindFirstValue(
-                                ClaimTypes.NameIdentifier) ?? "system",
-                Action = $"Added Site '{SiteName}' " +
-                            $"to Protocol ID: {SiteProtocolID}",
-                Timestamp = DateTime.UtcNow
             });
 
-            await _context.SaveChangesAsync();
             SuccessMessage = $"Site '{SiteName}' added.";
             return RedirectToPage();
         }
 
-        //POST: Edit Site
+        // POST: Edit Site
         public async Task<IActionResult> OnPostEditSiteAsync()
         {
-            var site = await _context.Sites
-                .Include(s => s.Protocol)
-                .FirstOrDefaultAsync(s => s.SiteID == EditSiteID);
-
-            if (site == null)
+            if (string.IsNullOrEmpty(EditSiteName) || string.IsNullOrEmpty(EditSiteLocation))
             {
-                ErrorMessage = "Site not found.";
-                await LoadDataAsync();
-                return Page();
-            }
-
-            if (string.IsNullOrEmpty(EditSiteName) ||
-                string.IsNullOrEmpty(EditSiteLocation))
-            {
-                ErrorMessage =
-                    "Site name and location are required.";
+                ErrorMessage = "Site name and location are required.";
                 await LoadDataAsync();
                 return Page();
             }
 
             if (EditSiteInvestigatorID.HasValue)
             {
-                var alreadyAssigned = await _context.Sites
-                    .AnyAsync(s =>
-                        s.InvestigatorID == EditSiteInvestigatorID
-                        && s.SiteID != EditSiteID);
+                var allProtocols = await _protocolService.GetAllProtocolsAsync();
+                var alreadyAssigned = allProtocols
+                    .SelectMany(p => p.Sites)
+                    .Any(s => s.InvestigatorID == EditSiteInvestigatorID
+                           && s.SiteID != EditSiteID);
 
                 if (alreadyAssigned)
                 {
-                    ErrorMessage =
-                        "This investigator is already assigned " +
-                        "to another site.";
+                    ErrorMessage = "This investigator is already assigned to another site.";
                     await LoadDataAsync();
                     return Page();
                 }
             }
 
-            site.Name = EditSiteName;
-            site.Location = EditSiteLocation;
-            site.Status = EditSiteStatus;
-            site.InvestigatorID = EditSiteInvestigatorID;
+            var success = await _protocolService.UpdateSiteAsync(
+                EditSiteID,
+                new UpdateSiteRequest
+                {
+                    Name = EditSiteName,
+                    Location = EditSiteLocation,
+                    Status = EditSiteStatus,
+                    InvestigatorID = EditSiteInvestigatorID
+                });
 
-            _context.AuditLogs.Add(new AuditLog
+            if (!success)
             {
-                UserID = User.FindFirstValue(
-                                ClaimTypes.NameIdentifier) ?? "system",
-                Action = $"Updated Site '{EditSiteName}'",
-                Timestamp = DateTime.UtcNow
-            });
+                ErrorMessage = "Site not found.";
+                await LoadDataAsync();
+                return Page();
+            }
 
-            await _context.SaveChangesAsync();
             SuccessMessage = $"Site '{EditSiteName}' updated.";
             return RedirectToPage();
         }
 
-        //POST: Delete Site
-        public async Task<IActionResult> OnPostDeleteSiteAsync(
-            Guid siteId)
+        // POST: Delete Site
+        public async Task<IActionResult> OnPostDeleteSiteAsync(Guid siteId)
         {
-            var site = await _context.Sites
-                .FirstOrDefaultAsync(s => s.SiteID == siteId);
-
-            if (site != null)
-            {
-                _context.AuditLogs.Add(new AuditLog
-                {
-                    UserID = User.FindFirstValue(
-                                    ClaimTypes.NameIdentifier) ?? "system",
-                    Action = $"Deleted Site '{site.Name}'",
-                    Timestamp = DateTime.UtcNow
-                });
-                _context.Sites.Remove(site);
-                await _context.SaveChangesAsync();
-                SuccessMessage = $"Site '{site.Name}' deleted.";
-            }
-
+            var deleted = await _protocolService.DeleteSiteAsync(siteId);
+            if (deleted) SuccessMessage = "Site deleted.";
             return RedirectToPage();
         }
 
-        //POST: Delete Protocol
-        public async Task<IActionResult> OnPostDeleteProtocolAsync(
-            Guid protocolId)
+        // POST: Delete Protocol
+        public async Task<IActionResult> OnPostDeleteProtocolAsync(Guid protocolId)
         {
-            var protocol = await _context.Protocols
-                .Include(p => p.Sites)
-                .FirstOrDefaultAsync(
-                    p => p.ProtocolID == protocolId);
-
-            if (protocol != null)
-            {
-                _context.AuditLogs.Add(new AuditLog
-                {
-                    UserID = User.FindFirstValue(
-                                    ClaimTypes.NameIdentifier) ?? "system",
-                    Action = $"Deleted Protocol: {protocol.Title}",
-                    Timestamp = DateTime.UtcNow
-                });
-                _context.Protocols.Remove(protocol);
-                await _context.SaveChangesAsync();
-                SuccessMessage = "Protocol deleted.";
-            }
-
+            await _protocolService.DeleteProtocolAsync(protocolId);
+            SuccessMessage = "Protocol deleted.";
             return RedirectToPage();
         }
 
-        //  Load Data 
+        // Load Data
         private async Task LoadDataAsync()
         {
-            Protocols = await _context.Protocols
-                .Include(p => p.Sites)
-                .OrderByDescending(p => p.CreatedDate)
-                .ToListAsync();
+            Protocols = await _protocolService.GetAllProtocolsAsync();
+            Investigators = await _protocolService.GetInvestigatorsAsync();
 
-            Investigators = await _context.Users
-                .Where(u => u.IsActive)
-                .OrderBy(u => u.FullName)
-                .ToListAsync();
-
-            AssignedInvestigatorIDs = await _context.Sites
+            AssignedInvestigatorIDs = Protocols
+                .SelectMany(p => p.Sites)
                 .Where(s => s.InvestigatorID != null)
                 .Select(s => s.InvestigatorID!.Value.ToString())
-                .ToListAsync();
+                .ToList();
 
             TotalSites = Protocols.Sum(p => p.Sites.Count);
             ActiveCount = Protocols.Count(p => p.Status == "Active");
@@ -419,7 +275,7 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
             CompletedCount = Protocols.Count(p => p.Status == "Completed");
         }
 
-        //Helpers 
+        // Helpers
         public string GetProtocolBadge(string status) => status switch
         {
             "Active" => "text-success bg-success bg-opacity-10",
@@ -437,12 +293,11 @@ namespace LifeSci360.Identity.API.Pages.Dashboard
         };
 
         public string GetInitial(string name) =>
-            string.IsNullOrEmpty(name) ? "?"
-            : name.Substring(0, 1).ToUpper();
+            string.IsNullOrEmpty(name) ? "?" : name.Substring(0, 1).ToUpper();
 
         public string GetInvestigatorName(Guid? id) =>
             id == null ? "Not assigned"
-            : Investigators.FirstOrDefault(u => u.Id == id.Value.ToString())?.FullName
+            : Investigators.FirstOrDefault(u => u.ID == id.Value.ToString())?.FullName
               ?? "Unknown";
     }
 }

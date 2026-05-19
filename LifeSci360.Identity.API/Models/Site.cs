@@ -23,7 +23,6 @@ namespace LifeSci360.Identity.API.Models
 
         public Guid? SampleID { get; set; }
 
-        // Navigation properties
         [ForeignKey("ProtocolID")]
         public Protocol? Protocol { get; set; }
     }

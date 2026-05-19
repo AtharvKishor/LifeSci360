@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using LifeSci360.Identity.API.Models;
 using LifeSci360.Identity.API.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace LifeSci360.Identity.API.Pages.Admin
 {
@@ -112,10 +113,18 @@ namespace LifeSci360.Identity.API.Pages.Admin
 
     public class CreateUserInput
     {
+        [Required(ErrorMessage = "Full name is required.")]
         public string FullName { get; set; }
+        [Required(ErrorMessage = "Email address is required.")]
+        [EmailAddress(ErrorMessage = "Enter a valid email address.")]
         public string Email { get; set; }
+        [Required(ErrorMessage = "Phone number is required.")]
+        [MaxLength(10)]
         public string PhoneNumber { get; set; }
+        [Required(ErrorMessage = "Please select a role.")]
         public string Role { get; set; }
+        [Required(ErrorMessage = "Temporary password is required.")]
+        [MinLength(10, ErrorMessage = "Password must be at least 10 characters.")]
         public string TempPassword { get; set; }
     }
 }

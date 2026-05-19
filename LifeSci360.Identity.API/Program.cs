@@ -1,8 +1,7 @@
 using LifeSci360.Identity.API.Data;
 using LifeSci360.Identity.API.Models;
 using LifeSci360.Identity.API.Services;
-using LifeSci360.Shared.Enums;
-using LifeSci360.Shared.Services;           
+using LifeSci360.Shared.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,61 +36,17 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IProtocolService, ProtocolService>();
+builder.Services.AddScoped<DatabaseSeeder>();   
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-
-    //string[] roles =
-    //{
-    //    "Admin",
-    //    "ResearchScientist",
-    //    "LabTechnician",
-    //    "ClinicalTrialManager",
-    //    "RegulatoryOfficer",
-    //    "DataManager"
-    //};
-
-    string[] roles = Enum.GetNames(typeof(UserRole));
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new ApplicationRole
-            {
-                Name = role,
-                Description = $"{role} role for LifeSci360",
-                CreatedDate = DateTime.UtcNow,
-                IsActive = true
-            });
-        }
-    }
-
-    var adminEmail = "admin@lifesci360.com";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-    if (adminUser == null)
-    {
-        var admin = new User
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            FullName = "System Admin",
-            IsActive = true,
-            CreatedDate = DateTime.UtcNow,
-            EmailConfirmed = true
-        };
-
-        var result = await userManager.CreateAsync(admin, "Admin@12345!");
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(admin, nameof(UserRole.Admin));
-        }
-    }
+    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedAsync();
 }
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

@@ -12,6 +12,8 @@ namespace LifeSci360.Shared.Services
         Task<bool> AddSiteAsync(Guid protocolId, CreateSiteRequest request);
         Task<bool> UpdateSiteAsync(Guid siteId, UpdateSiteRequest request);
         Task<List<ProtocolDto>> SearchProtocolsAsync(string? title, string? phase, string? status);
-        Task<List<InvestigatorDto>> GetInvestigatorsAsync(); 
+        Task<List<InvestigatorDto>> GetInvestigatorsAsync();
+        Task<bool> DeleteSiteAsync(Guid siteId);
+        Task AutoUpdateProtocolStatusesAsync();
     }
 }

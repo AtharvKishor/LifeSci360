@@ -166,7 +166,6 @@
                 <table class="table mb-0" id="protocolTable">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Title</th>
                             <th>Status</th>
                             <th>Phase Type</th>
@@ -189,10 +188,7 @@
                         @foreach (var p in Model.Protocols)
                         {
                             <tr>
-                                <td class="text-muted"
-                                    style="font-size:12px">
-                                    #@p.ProtocolID
-                                </td>
+                              
                                 <td>
                                     <div class="fw-semibold">
                                         @p.Title
